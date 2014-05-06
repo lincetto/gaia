@@ -10,11 +10,12 @@
  */
 
 controllaParametri(array('oid'));
+paginaPrivata();
 
 $_daGestire = [
     APP_CO          =>  [EST_UNITA, EST_LOCALE, EST_PROVINCIALE, EST_REGIONALE, EST_NAZIONALE],
     APP_SOCI        =>  [EST_UNITA, EST_LOCALE, EST_PROVINCIALE, EST_REGIONALE, EST_NAZIONALE],
-    //APP_FORMAZIONE  =>  [EST_LOCALE, EST_PROVINCIALE, EST_REGIONALE, EST_NAZIONALE]
+    APP_FORMAZIONE  =>  [EST_LOCALE, EST_PROVINCIALE, EST_REGIONALE, EST_NAZIONALE]
 ];
 
 $c = $_GET['oid'];
@@ -112,7 +113,7 @@ $(document).ready(function() {
             <li>
                 <a data-toggle="tab" href="#benemeriti">
                     <i class='icon-money'></i>
-                    Soci Benemeriti
+                    Soci Sostenitori
                 </a>
             </li>
             <?php } ?>
@@ -241,15 +242,15 @@ $(document).ready(function() {
                 
             </div>
 
-            <!-- Tab: Soci Benemeriti -->
+            <!-- Tab: Soci Sostenitori -->
             <?php if($c instanceOf Locale) { ?>
             <div class="tab-pane"    id="benemeriti">
-                <h4>Tesseramenti e importi della quota socio benemerito</h4>
+                <h4>Tesseramenti e importi della quota socio sostenitore</h4>
                 <form action="?p=presidente.comitato.ok" method="POST">
 
                     <div class="alert alert-info">
                         <i class="icon-info-sign"></i> Modifiche non reversibili. <br />
-                        Una volta modificato l'importo della quota integrativa per i soci Benemeriti
+                        Una volta modificato l'importo della quota integrativa per i soci Sostenitori
                         l'operazione non può essere annullata. <br />Per problemi contattare il supporto.
                     </div>
                     <input type="hidden" name="oid" value="<?php echo $c->oid(); ?>" />
@@ -259,7 +260,7 @@ $(document).ready(function() {
                         <thead>
                             <th>Anno</th>
                             <th>Stato</th>
-                            <th>Importo per soci benemeriti</th>
+                            <th>Importo per soci Sostenitori</th>
                             <th>Azione</th>
                         </thead>
 

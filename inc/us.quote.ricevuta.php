@@ -21,14 +21,11 @@ $attivo = false;
 if ($v->stato == VOLONTARIO) {
   $attivo = true;
 }
-if (!$t = Tesseramento::by('anno', $q->anno)) {
+if (!$t = Tesseramento::by('anno', $quota->anno)) {
   $t = new StdClass();
   $t->attivo = 8;
   $t->ordinario = 16;
 }
-
-$importo = (float) $_POST['inputImporto'];
-$importo = round($importo, 2);
 
 $quotaMin = $attivo ? $t->attivo : $t->ordinario;
 
@@ -53,7 +50,7 @@ if (($quota->quota - $quotaMin) > 0) {
 }
 $p->_TOTALE     = soldi($quota->quota);
 $p->_LUOGO      = $quota->comitato()->locale()->comune;
-$p->_DATA       = date('d/m/Y', $quota->tConferma);
+$p->_DATA       = $quota->dataPagamento()->format('d/m/Y');
 $p->_CHINOME    = $quota->conferma()->nomeCompleto();
 $p->_CHICF      = $quota->conferma()->codiceFiscale;
 $f = $p->salvaFile($quota->comitato());  

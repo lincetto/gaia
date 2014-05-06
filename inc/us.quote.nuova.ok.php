@@ -11,6 +11,10 @@ controllaParametri($parametri, 'us.dash&err');
 
 $v = Utente::id($_POST['vol']);
 
+if(!$v->modificabileDa($me)) {
+  redirect('us.dash&err');
+}
+
 proteggiDatiSensibili($v, [APP_SOCI , APP_PRESIDENTE]);
 
 if (!$t = Tesseramento::attivo()) {
@@ -54,7 +58,7 @@ $q->pConferma 		= $me;
 $q->anno 			= $anno;
 $q->assegnaProgressivo();
 $q->quota 			= $importo;
-if ($importo > $quotaBen) {
+if ($importo >= $quotaBen) {
 	$q->benemerito = BENEMERITO_SI;
 	$q->offerta = "Promozione a socio sostenitore per l'anno " . $anno . " per il versamento di una quota superiore a " . soldi($quotaBen) . " &#0128;.";
 } elseif ($importo > $quotaMin) {
@@ -87,7 +91,7 @@ if ($q->quota - $quotaMin > 0) {
 }
 $p->_TOTALE     = soldi($q->quota);
 $p->_LUOGO 		= $app->comitato()->locale()->comune;
-$p->_DATA 		= date('d-m-Y', time());
+$p->_DATA 		= $q->dataPagamento()->format('d/m/Y');
 $p->_CHINOME	= $me->nomeCompleto();
 $p->_CHICF		= $me->codiceFiscale;
 $f = $p->salvaFile($app->comitato());                                

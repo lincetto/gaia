@@ -123,6 +123,8 @@ if(!$gia){
 
 /* Generazione della quota */
 
+$quotaMin = $t->ordinario;
+
 $q = new Quota();
 $q->appartenenza 	= $a;
 $q->timestamp 		= time();
@@ -134,7 +136,7 @@ $q->quota 			= $importo;
 
 $quotaBen = $t->ordinario + (float) $a->comitato()->quotaBenemeriti();
 $q->causale 		= "Iscrizione socio ordinario CRI anno {$anno}"; 
-if ($importo > $quotaBen) {
+if ($importo >= $quotaBen) {
 	$q->benemerito = BENEMERITO_SI;
 	$q->offerta = "Promozione a socio sostenitore per l'anno {$anno} per il versamento di una quota superiore a " . soldi($quotaBen) . " &#0128;.";
 }
@@ -151,7 +153,7 @@ $l->_NASCITA 	= date('d/m/Y', $p->dataNascita);
 $l->_LUOGO 		= $p->luogoNascita;
 $l->_IMPORTO	= soldi($q->quota - ($q->quota - $quotaMin));
 $l->_QUOTA  	= $q->causale;
-if ($q->q - $quotaMin > 0) {
+if ($q->quota - $quotaMin > 0) {
 	$l->_OFFERTA	= $q->offeta;
 	$l->_OFFERIMPORTO = soldi($q->quota - $quotaMin) . "  &#0128; ";
 } else {
@@ -160,10 +162,10 @@ if ($q->q - $quotaMin > 0) {
 }
 $l->_TOTALE		= soldi($quota->quota);
 $l->_LUOGO 		= $a->comitato()->locale()->comune;
-$l->_DATA 		= date('d-m-Y', time());
+$l->_DATA 		= $q->dataPagamento()->format('d/m/Y');
 $l->_CHINOME	= $me->nomeCompleto();
 $l->_CHICF		= $me->codiceFiscale;
-$f = $l->salvaFile();  
+$f = $l->salvaFile($q->comitato());
 
 
 

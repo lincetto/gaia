@@ -23,6 +23,9 @@
             data-attendere="Generazione lista...">
             <i class="icon-list"></i>
             Volontari in riserva
+        </a> /
+        <a href="?p=presidente.utenti.riservepassate">
+             riserve passate
         </a><br />
         <a href="?p=presidente.utenti.giovani"
             data-attendere="Generazione lista...">
@@ -36,6 +39,13 @@
         </a> /
         <a href="?p=presidente.utenti.inestensione">
              in estensione
+        </a><br />
+        <a href="?p=presidente.iv">
+            <i class="icon-list"></i>
+            Infermiere V.
+        </a> /
+        <a href="?p=presidente.cm">
+             Corpo Militare V.
         </a><br />
         <a href="?p=presidente.soci">
             <i class="icon-list"></i>

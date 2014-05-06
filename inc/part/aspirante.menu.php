@@ -14,14 +14,9 @@ $menu += [
     ],
     'Aspirante'    =>  [
         'utente.anagrafica' =>  '<i class="icon-edit"></i> Anagrafica',
-        'aspirante.localita' => '<i class="icon-map-marker"></i> Dove ti trovi?'       
-    ],
-    'Comunicazioni' =>  [
-        'utente.email'     =>   '<i class="icon-envelope-alt"></i> Email',
-        'utente.cellulare' =>   '<i class="icon-phone"></i> Cellulare'
-    ],
-    'Impostazioni' =>  [
-        'utente.password'     =>   '<i class="icon-key"></i> Password'
+        'aspirante.localita' => '<i class="icon-map-marker"></i> Dove ti trovi?',
+        'utente.posta'     =>   '<i class="icon-envelope-alt"></i> Posta'
+    
     ]
 ];
 
