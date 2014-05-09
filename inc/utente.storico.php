@@ -124,6 +124,7 @@ paginaPrivata();
                     <thead>
                         <th>Stato</th>
                         <th>Comitato</th>
+                        <th>Tipo</th>
                         <th>Inizio</th>
                         <th>Fine</th>
                         <th>Prot. Num.</th>
@@ -145,6 +146,10 @@ paginaPrivata();
                                 <?= $prov->comitato()->nomeCompleto(); ?>
                             </td>
                                     
+                            <td>
+                                <?= $conf['provvedimenti'][$prov->tipo]; ?>
+                            </td>
+
                             <td>
                                 <i class="icon-calendar muted"></i>
                                 <?= date('d/m/Y', $prov->inizio); ?>

@@ -1755,4 +1755,16 @@ class Utente extends Persona {
         return null;
     }
 
+    public function provvedimenti() {
+        $provvedimenti = Provvedimento::filtra([
+            ['volontario', $this->id]
+        ], 'INIZIO DESC');
+
+        foreach ( $provvedimenti as $provvedimento )
+            if($provvedimento->attuale()){
+                return true;
+        }
+        return false;
+    }
+
 }

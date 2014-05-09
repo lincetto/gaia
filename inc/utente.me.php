@@ -8,7 +8,7 @@ paginaPrivata(false);
 
 if ( $me->stato == ASPIRANTE )
     redirect('aspirante.home');
-
+echo $me->provvedimenti();
 /* Inizio sezione modali */
 
 $consenso = $me->consenso();

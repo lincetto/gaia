@@ -454,7 +454,7 @@ CREATE TABLE IF NOT EXISTS `provvedimenti` (
   `fine` varchar(64) DEFAULT NULL,
   `protData` varchar(64) DEFAULT NULL,
   `protNumero` varchar(16) DEFAULT NULL,
-  `pConferma` varchar(16) DEFAULT NULL
+  `pConferma` varchar(16) DEFAULT NULL,
   `tConferma` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `volontario` (`volontario`)
