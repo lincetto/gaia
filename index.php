@@ -270,6 +270,8 @@ $_descrizione   = 'Crediamo in una Croce Rossa Italiana che sa muoversi veloceme
                                     <li><a href="?p=admin.limbo"><i class="icon-meh"></i> Limbo</a></li> 
                                     <li><a href="?p=admin.double"><i class="icon-superscript"></i> Double</a></li>
                                     <li><a href="?p=admin.tesseramento"><i class="icon-eur"></i> Tesseramento</a></li>
+                                    <li class="nav-header">Extended</li>
+                                    <li><a href="?p=admin.faq"><i class="icon-reorder"></i> FAQ</a></li> 
                                     <li class="nav-header">Report & Co</li>
                                     <li><a href="?p=admin.report"><i class="icon-copy"></i> Report</a></li>  
                                     <li><a href="?p=admin.report.comitati.excel"><i class="icon-building"></i> Excel Comitati</a></li>  
