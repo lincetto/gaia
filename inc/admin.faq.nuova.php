@@ -21,7 +21,7 @@ paginaModale();
           <label class="control-label" for="inputDomanda"><strong>Domanda</strong></label>
         </div>
         <div class="span8">
-          <textarea row="3" name="inputDomanda" id="inputDomanda" required /></textarea>
+          <textarea class="span12" name="inputDomanda" id="inputDomanda" required /></textarea>
         </div>
       </div>
       <div class="row-fluid">
@@ -29,7 +29,7 @@ paginaModale();
           <label class="control-label" for="inputRisposta"><strong>Risposta</strong></label>
         </div>
         <div class="span8">
-          <textarea row="3" name="inputRisposta" id="inputRisposta" required /></textarea>
+          <textarea class="span12" name="inputRisposta" id="inputRisposta" required /></textarea>
         </div>
       </div>
     </div>
