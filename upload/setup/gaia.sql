@@ -317,6 +317,15 @@ CREATE TABLE IF NOT EXISTS `estensioni` (
   KEY `volontario` (`volontario`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+CREATE TABLE IF NOT EXISTS `faq` (
+  `id` int(11) NOT NULL,
+  `domanda` varchar(255) DEFAULT NULL,
+  `risposta` varchar(255) DEFAULT NULL,
+  `pConferma` varchar(64) DEFAULT NULL,
+  `tConferma` varchar(16) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `file` (
   `id` varchar(64) NOT NULL,
   `creazione` varchar(64) DEFAULT NULL,

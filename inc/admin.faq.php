@@ -29,7 +29,7 @@ if ( isset($_GET['ok']) ) { ?>
     </a>
 </div>
 
-<i class="icon-order"></i><h2>Faq</h2>
+<h2><i class="icon-reorder"></i> Faq</h2>
 
 <table class="table table-bordered">
     <tbody>
@@ -37,7 +37,7 @@ if ( isset($_GET['ok']) ) { ?>
             ?>
             <tr>
                 <td>
-                    <p><strong>D:</strong></p>
+                    <p><strong>Domanda:</strong></p>
                 </td>
                 <td>
                     <?php echo $f->domanda; ?>
@@ -55,7 +55,7 @@ if ( isset($_GET['ok']) ) { ?>
             </tr>
             <tr>
                 <td>
-                    <p><strong>R:</strong></p>
+                    <p><strong>Risposta:</strong></p>
                 </td>
                 <td>
                     <?php echo $f->risposta; ?> 
@@ -63,7 +63,6 @@ if ( isset($_GET['ok']) ) { ?>
                 <td>
                 </td>
             </tr>
-            <br/>
         <?php } ?>
     </tbody>
 </table>

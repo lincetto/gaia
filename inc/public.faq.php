@@ -18,10 +18,10 @@
       <h2><i class="icon-reorder"></i> FAQ</h2>
       <hr />
       <?php $faq = Faq::elenco();
-        foreach ($faq as $f){
-          echo $f->domanda;
-          echo $f->risposta;
-          } ?>
+        foreach ($faq as $f){ ?>
+          <strong>Domanda: </strong><?= $f->domanda; ?><br/>
+          <strong>Risposta: </strong><?= $f->risposta; ?><br/>
+        <?php } ?>
     </div>
 </div>
 
