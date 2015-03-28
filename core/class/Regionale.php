@@ -10,6 +10,8 @@ class Regionale extends GeoPolitica {
         $_t  = 'regionali',
         $_dt = 'datiRegionali';
 
+    use EntitaCache;
+
     public static 
         $_ESTENSIONE = EST_REGIONALE;
 
@@ -18,10 +20,13 @@ class Regionale extends GeoPolitica {
         return $this->nome;
     }
 
-    public function estensione() {
+    public function estensione($soloComitati = true) {
         $r = [];
+        if(!$soloComitati) {
+            $r[] = $this;
+        }
         foreach  ( $this->provinciali() as $l ) {
-            $r = array_merge($l->estensione(), $r);
+            $r = array_merge($l->estensione($soloComitati), $r);
         }
         return array_unique($r);
     }

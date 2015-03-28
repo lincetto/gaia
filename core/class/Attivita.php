@@ -10,6 +10,8 @@ class Attivita extends GeoEntita {
         $_t  = 'attivita',
         $_dt = 'dettagliAttivita';
 
+    use EntitaCache;
+
     public function comitato() {
         if ( $this->comitato ) {
             return GeoPolitica::daOid($this->comitato);
@@ -79,13 +81,15 @@ class Attivita extends GeoEntita {
     public function modificabileDa(Utente $u) {
         return (bool) (
                 $u->id == $this->referente
-            ||  in_array($this->area, $u->areeDiCompetenza())
-            ||  in_array($this, $u->attivitaDiGestione())
+            ||  $u->admin() 
+            ||  contiene($this->area, $u->areeDiCompetenza())
+            ||  contiene($this, $u->attivitaDiGestione())
         );
     }
     
     public function puoPartecipare($v) {
         if (!$v) { return true; }
+        if ($v->provvedimento()->tipo == PROVV_SOSPENSIONE){ return false;}
 
         $geoComitato = GeoPolitica::daOid($this->comitato);
         if ( $this->referente == $v->id || $v->admin() || $geoComitato->unPresidente()->id == $v->id ) {
@@ -255,5 +259,23 @@ class Attivita extends GeoEntita {
                                     break;
         }
     }
-    
+
+    /**
+     * Ottiene la GeoPolitica corrispondente alla Visibilita' dell'attivita'
+     * es., se l'attivita' e' visibile a livello provinciale, ottiene oggetto Provinciale corrispondente
+     * @return GeoPolitica
+     */
+    public function visibilita() {
+        global $conf;
+        $needle = $conf['est_attivita2geopolitica'][(int) $this->visibilita];
+        $x = $this->comitato();
+        while ( $x::$_ESTENSIONE != $needle ) {
+            if ( $x instanceOf Nazionale ) {
+                throw new Errore();
+            }
+            $x = $x->superiore();
+        }
+        return $x;
+    }
+
 }

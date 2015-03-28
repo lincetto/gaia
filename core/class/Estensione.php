@@ -9,6 +9,8 @@ class Estensione extends Entita {
     protected static
         $_t  = 'estensioni',
         $_dt = null;
+
+    use EntitaCache;
     
     public function volontario() {
         return Volontario::id($this->volontario);
@@ -23,8 +25,8 @@ class Estensione extends Entita {
         return $this->appartenenza()->comitato();
     }
 
-    public function provenienzaa() {
-        return $this->cProvenienza->comitato();
+    public function provenienza() {
+        return Comitato::id($this->cProvenienza);
     }
 
     public function presaInCarico() {
@@ -192,7 +194,7 @@ class Estensione extends Entita {
         $traunmese = time() + MESE;
         foreach ($e as $_e) {
             if ($_e->appartenenza()->fine < $traunmese)
-                $r[] = $_ris;
+                $r[] = $_e;
         }
         return $r;
     }

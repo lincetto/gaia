@@ -32,8 +32,11 @@ upload/get/
 # Lock file
 upload/setup/lock
 
-# Albero dei comitati
-upload/setup/albero.json
+# Roba scaricata temporaneamente
+upload/setup/*.json
+
+# Tutta la cache 
+upload/setup/cache_*
 
 # Autopull
 upload/setup/autopull

@@ -54,8 +54,8 @@ CREATE TABLE IF NOT EXISTS `appartenenza` (
   `volontario` varchar(16) DEFAULT NULL,
   `comitato` varchar(16) DEFAULT NULL,
   `stato` varchar(8) DEFAULT NULL,
-  `inizio` varchar(64) DEFAULT NULL,
-  `fine` varchar(64) DEFAULT NULL,
+  `inizio` bigint(20) DEFAULT NULL,
+  `fine` bigint(20) DEFAULT NULL,
   `timestamp` varchar(64) DEFAULT NULL,
   `conferma` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -98,12 +98,26 @@ CREATE TABLE IF NOT EXISTS `attivita` (
   `descrizione` text,
   `stato` int(11) DEFAULT NULL,
   `area` int(16) DEFAULT NULL,
+  `apertura` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `comitato` (`comitato`),
   KEY `referente` (`referente`),
   SPATIAL KEY `geo` (`geo`),
   KEY `area` (`area`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE IF NOT EXISTS `autoparchi` (
+  `id` int(11) NOT NULL,
+  `nome` varchar(255) DEFAULT NULL,
+  `comitato` varchar(16) DEFAULT NULL,
+  `geo` point NOT NULL,
+  `pFirma` varchar(16) DEFAULT NULL,
+  `tFirma` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `comitato` (`comitato`),
+  SPATIAL KEY `geo` (`geo`),
+  FULLTEXT KEY `indice` (`comitato`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `autorizzazioni` (
   `id` int(11) NOT NULL,
@@ -127,6 +141,21 @@ CREATE TABLE IF NOT EXISTS `avatar` (
   PRIMARY KEY (`id`),
   KEY `utente` (`utente`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE IF NOT EXISTS `collocazioneVeicoli` (
+  `id` int(11) NOT NULL,
+  `veicolo` varchar(16) DEFAULT NULL,
+  `autoparco` varchar(16) DEFAULT NULL,
+  `pConferma` varchar(16) DEFAULT NULL,
+  `tConferma` varchar(64) DEFAULT NULL,
+  `inizio` varchar(64) DEFAULT NULL,
+  `fine` varchar(64) DEFAULT NULL,
+  `pFine` varchar(16) DEFAULT NULL,
+  `tFine` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `veicolo` (`veicolo`),
+  KEY `autoparco` (`autoparco`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `comitati` (
   `id` int(11) NOT NULL,
@@ -158,11 +187,13 @@ CREATE TABLE IF NOT EXISTS `corsibase` (
   `organizzatore` varchar(32) DEFAULT NULL,
   `direttore` varchar(32) DEFAULT NULL,
   `inizio` varchar(64) DEFAULT NULL,
-  `progressivo` varchar(64) DEFAULT NULL,
+  `progressivo` int(11) DEFAULT NULL,
   `anno` VARCHAR(8) NULL DEFAULT NULL,
   `geo` point NOT NULL,
   `descrizione` text,
   `stato` int(11) DEFAULT NULL,
+  `aggiornamento` varchar(64) DEFAULT NULL,
+  `tEsame` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `organizzatore` (`organizzatore`),
   KEY `direttore` (`direttore`),
@@ -186,6 +217,13 @@ CREATE TABLE IF NOT EXISTS `coturni` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE IF NOT EXISTS `datiComitati` (
+  `id` varchar(128) NOT NULL DEFAULT '',
+  `nome` varchar(32) NOT NULL DEFAULT '',
+  `valore` text,
+  PRIMARY KEY (`id`,`nome`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `datiPartecipazioniBase` (
   `id` varchar(128) NOT NULL DEFAULT '',
   `nome` varchar(32) NOT NULL DEFAULT '',
   `valore` text,
@@ -252,7 +290,21 @@ CREATE TABLE IF NOT EXISTS `dettagliAttivita` (
   PRIMARY KEY (`id`,`nome`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+CREATE TABLE IF NOT EXISTS `dettagliAutoparco` (
+  `id` varchar(128) NOT NULL DEFAULT '',
+  `nome` varchar(32) NOT NULL DEFAULT '',
+  `valore` text,
+  PRIMARY KEY (`id`,`nome`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `dettagliComitato` (
+  `id` varchar(128) NOT NULL DEFAULT '',
+  `nome` varchar(32) NOT NULL DEFAULT '',
+  `valore` text,
+  PRIMARY KEY (`id`,`nome`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `dettagliCorsibase` (
   `id` varchar(128) NOT NULL DEFAULT '',
   `nome` varchar(32) NOT NULL DEFAULT '',
   `valore` text,
@@ -267,6 +319,13 @@ CREATE TABLE IF NOT EXISTS `dettagliPersona` (
   KEY `id` (`id`),
   KEY `nome` (`nome`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+CREATE TABLE IF NOT EXISTS `dettagliVeicolo` (
+  `id` varchar(128) NOT NULL DEFAULT '',
+  `nome` varchar(32) NOT NULL DEFAULT '',
+  `valore` text,
+  PRIMARY KEY (`id`,`nome`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `dimissioni` (
   `id` int(11) NOT NULL,
@@ -299,6 +358,40 @@ CREATE TABLE IF NOT EXISTS `elementiRichieste` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `email` (
+  `id` varchar(127) NOT NULL,
+  `invio_iniziato` bigint(20) DEFAULT NULL,
+  `invio_terminato` bigint(20) DEFAULT NULL,
+  `mittente_id` int(11) DEFAULT NULL,
+  `oggetto` varchar(255) DEFAULT NULL,
+  `corpo` text,
+  `timestamp` bigint(20) DEFAULT NULL,
+  PRIMARY KEY `id` (`id`),
+  KEY `invio_iniziato` (`invio_iniziato`),
+  KEY `invio_terminato` (`invio_terminato`),
+  KEY `mittente_id` (`mittente_id`),
+  KEY `timestamp` (`timestamp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `email_allegati` (
+  `email` varchar(127) NOT NULL,
+  `allegato_id` varchar(64) DEFAULT NULL,
+  `allegato_nome` varchar(255) DEFAULT NULL,
+  KEY `email` (`email`),
+  KEY `allegato_id` (`allegato_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `email_destinatari` (
+  `email` varchar(127) NOT NULL,
+  `dest` int(11) DEFAULT NULL,
+  `inviato` bigint(20) DEFAULT NULL,
+  `ok` tinyint(4) DEFAULT NULL,
+  `errore` varchar(255) DEFAULT NULL,
+  KEY `email` (`email`),
+  KEY `dest` (`dest`),
+  KEY `inviato` (`inviato`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `estensioni` (
   `id` int(11) NOT NULL,
   `stato` varchar(16) DEFAULT NULL,
@@ -317,6 +410,20 @@ CREATE TABLE IF NOT EXISTS `estensioni` (
   KEY `volontario` (`volontario`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+CREATE TABLE IF NOT EXISTS `fermotecnico` (
+  `id` int(11) NOT NULL,
+  `veicolo` varchar(16) DEFAULT NULL,
+  `inizio` varchar(64) DEFAULT NULL,
+  `fine` varchar(64) DEFAULT NULL,
+  `motivo` text,
+  `pInizio` varchar(16) DEFAULT NULL,
+  `tInizio` varchar(64) DEFAULT NULL,
+  `pFine` varchar(16) DEFAULT NULL,
+  `tFine` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `veicolo` (`veicolo`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
 CREATE TABLE IF NOT EXISTS `file` (
   `id` varchar(64) NOT NULL,
   `creazione` varchar(64) DEFAULT NULL,
@@ -327,6 +434,15 @@ CREATE TABLE IF NOT EXISTS `file` (
   `download` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `scadenza` (`scadenza`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `fototessera` (
+  `id` int(11) NOT NULL,
+  `utente` varchar(64) DEFAULT NULL,
+  `timestamp` varchar(16) DEFAULT NULL,
+  `stato` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `utente` (`utente`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `gruppi` (
@@ -359,6 +475,27 @@ CREATE TABLE IF NOT EXISTS `gruppiPersonali` (
   KEY `comitato` (`comitato`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `lezioni` (
+  `id` int(11) NOT NULL,
+  `nome` varchar(255) DEFAULT NULL,
+  `inizio` int(11) DEFAULT NULL,
+  `fine` int(11) DEFAULT NULL,
+  `corso` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `inizio` (`inizio`),
+  KEY `corso` (`corso`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `lezioni_assenze` (
+  `id` int(11) NOT NULL,
+  `lezione` int(11) DEFAULT NULL,
+  `utente` int(11) DEFAULT NULL,
+  `pConferma` int(11) DEFAULT NULL,
+  `tConferma` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `lezione` (`lezione`,`utente`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `locali` (
   `id` int(11) NOT NULL,
   `nome` varchar(255) DEFAULT NULL,
@@ -368,6 +505,35 @@ CREATE TABLE IF NOT EXISTS `locali` (
   KEY `provinciale` (`provinciale`),
   SPATIAL KEY `geo` (`geo`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `manutenzioni` (
+  `id` int(11) NOT NULL,
+  `veicolo` varchar(16) DEFAULT NULL,
+  `intervento` text,
+  `tIntervento` varchar(16) DEFAULT NULL,
+  `tRegistra` varchar(64) DEFAULT NULL,
+  `pRegistra` varchar(16) DEFAULT NULL,
+  `km` varchar(255) DEFAULT NULL,
+  `tipo` varchar(255) DEFAULT NULL,
+  `costo` varchar(64) DEFAULT NULL,
+  `fattura` varchar(255) DEFAULT NULL,
+  `azienda` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `veicolo` (`veicolo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `mipiace` (
+  `id` int(11) NOT NULL,
+  `oggetto` varchar(16) DEFAULT NULL,
+  `volontario` int(11) DEFAULT NULL,
+  `timestamp` int(16) DEFAULT NULL,
+  `tipo` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `volontario` (`volontario`),
+  KEY `oggetto` (`oggetto`),
+  KEY `cercatipo` (`volontario`, `oggetto`),
+  KEY `cercalike` (`tipo`, `oggetto`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `nazionali` (
   `id` int(11) NOT NULL,
@@ -399,8 +565,8 @@ CREATE TABLE IF NOT EXISTS `partecipazioniBase` (
   `timestamp` varchar(64) DEFAULT NULL,
   `tConferma` varchar(64) DEFAULT NULL,
   `pConferma` varchar(16) DEFAULT NULL,
-  `tAttestato` varchar(8) DEFAULT NULL,
-  `cAttestato` varchar(8) DEFAULT NULL,
+  `tAttestato` varchar(64) DEFAULT NULL,
+  `cAttestato` varchar(16) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `corsoBase` (`corsoBase`),
   KEY `volontario` (`volontario`)
@@ -428,6 +594,22 @@ CREATE TABLE IF NOT EXISTS `provinciali` (
   SPATIAL KEY `geo` (`geo`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `provvedimenti` (
+  `id` int(11) NOT NULL,
+  `tipo` varchar(8) DEFAULT NULL,
+  `volontario` varchar(16) DEFAULT NULL,
+  `appartenenza` varchar(16) DEFAULT NULL,
+  `motivo` varchar(255) DEFAULT NULL,
+  `inizio` varchar(64) DEFAULT NULL,
+  `fine` varchar(64) DEFAULT NULL,
+  `protData` varchar(64) DEFAULT NULL,
+  `protNumero` varchar(16) DEFAULT NULL,
+  `pConferma` varchar(16) DEFAULT NULL,
+  `tConferma` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `volontario` (`volontario`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `quote` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `appartenenza` varchar(16) DEFAULT NULL,
@@ -438,6 +620,10 @@ CREATE TABLE IF NOT EXISTS `quote` (
   `offerta` varchar(255) DEFAULT NULL,
   `causale` varchar(255) DEFAULT NULL,
   `anno` varchar(4) DEFAULT NULL,
+  `pAnnullata` varchar(16) DEFAULT NULL,
+  `tAnnullata` varchar(16) DEFAULT NULL,
+  `progressivo` int(8) DEFAULT NULL,
+  `benemerito` int(8) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `appartenenza` (`appartenenza`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7894 ;
@@ -472,6 +658,20 @@ CREATE TABLE IF NOT EXISTS `richiesteTurni` (
   `timestamp` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `rifornimento` (
+  `id` int(11) NOT NULL,
+  `pRegistra` varchar(16) DEFAULT NULL,
+  `tRegistra` varchar(64) DEFAULT NULL,
+  `km` varchar(255) DEFAULT NULL,
+  `data` varchar(64) DEFAULT NULL,
+  `veicolo` varchar(16) DEFAULT NULL,
+  `timestamp` varchar(64) DEFAULT NULL,
+  `litri` varchar(64) DEFAULT NULL,
+  `costo` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `veicolo` (`veicolo`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE IF NOT EXISTS `riserve` (
   `id` int(11) NOT NULL,
@@ -511,6 +711,27 @@ CREATE TABLE IF NOT EXISTS `tesseramenti` (
   `ordinario` varchar(10) DEFAULT NULL,
   `benemerito` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `tesserinoRichiesta` (
+  `id` int(11) NOT NULL,
+  `volontario` varchar(16) DEFAULT NULL,
+  `stato` int(11) DEFAULT NULL,
+  `tipo` int(11) DEFAULT NULL,
+  `codice` varchar(64) DEFAULT NULL,
+  `timestamp` varchar(64) DEFAULT NULL,
+  `pRichiesta` varchar(16) DEFAULT NULL,
+  `tRichiesta` varchar(64) DEFAULT NULL,
+  `pConferma` varchar(16) DEFAULT NULL,
+  `tConferma` varchar(64) DEFAULT NULL,
+  `motivo` text,
+  `struttura` varchar(64) DEFAULT NULL,
+  `pRiconsegnato` int(11) DEFAULT NULL,
+  `tRiconsegnato` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `volontario` (`volontario`),
+  KEY `struttura` (`struttura`),
+  KEY `codice` (`codice`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `titoli` (
@@ -578,6 +799,24 @@ CREATE TABLE IF NOT EXISTS `validazioni` (
   PRIMARY KEY (`id`),
   KEY `codice` (`codice`,`stato`,`volontario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `veicoli` (
+  `id` int(11) NOT NULL,
+  `targa` varchar(255) DEFAULT NULL,
+  `libretto` varchar(255) DEFAULT NULL,
+  `telaio` varchar(255) DEFAULT NULL,
+  `comitato` varchar(16) DEFAULT NULL,
+  `stato` varchar(8) DEFAULT NULL,
+  `pFuoriuso` varchar(16) DEFAULT NULL,
+  `tFuoriuso` varchar(64) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `targa` (`targa`),
+  KEY `libretto` (`libretto`),
+  KEY `telaio` (`telaio`),
+  KEY `comitato` (`comitato`),
+  KEY `stato` (`stato`),
+  FULLTEXT KEY `indice` (`libretto`,`targa`,`comitato`,`stato`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

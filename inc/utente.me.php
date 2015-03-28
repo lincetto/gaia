@@ -6,12 +6,14 @@
 
 paginaPrivata(false);
 
-if ( $me->stato == ASPIRANTE )
+$consenso = $me->consenso();
+
+if ( $me->stato == ASPIRANTE && $consenso )
     redirect('aspirante.home');
 
 /* Inizio sezione modali */
 
-$consenso = $me->consenso();
+
 if ( !$consenso ){ ?>
 <div class="modal fade automodal">
     <div class="modal-header">
@@ -20,7 +22,7 @@ if ( !$consenso ){ ?>
     <div class="modal-body">
         <p>Ciao <strong><?php echo $me->nome; ?></strong>, Gaia ha aggiornato le sue condizioni d'uso.</p>
         <p>È importante per noi che tu sia informato riguardo le finalità di questo portale e riguardo
-            a come vengono trattati i tuoi dati. Per fare ciò hai due possibilità: </p>
+            a come vengono trattati i tuoi dajuti. Per fare ciò hai due possibilità: </p>
         <ul>
             <li>Leggi la pagina delle <a href="?p=public.privacy" target="_new"> <i>condizioni d'uso</i></a> ; </li>
             <li>Apri una nuova finestra del browser. Digita gaia.cri.it, clicca <i>informazioni</i> in fondo alla pagina e poi <i>condizioni d'uso</i>.</li>
@@ -53,10 +55,6 @@ if (isset($_GET['rimandaPrivatizzazione'])) {
     $sessione->rimandaPrivatizzazione = true;
 }
 
-if (isset($_GET['rimandaDeadline'])) {
-    $sessione->deadline = time();
-}
-
 if ($consenso && !$me->email ) { redirect('nuovaAnagraficaContatti'); }
 if ($consenso && !$me->password && $sessione->tipoRegistrazione = VOLONTARIO ) { redirect('nuovaAnagraficaAccesso'); }
 
@@ -69,28 +67,6 @@ if ($consenso) {
         }
     }
 }
-
-if ((!$sessione->deadline || ($sessione->deadline + GIORNO) < time()) && $consenso) {
-    ?>
-    <div class="modal fade automodal">
-        <div class="modal-header">
-            <h3 class="text-success"><i class="icon-meh"></i> Termine sviluppo portale Gaia</h3>
-        </div>
-        <div class="modal-body">
-            Per favore trova un momento per leggere il comunicato degli sviluppatori 
-            e della squadra di supporto di Gaia riguardante le problematiche che stanno 
-            bloccando lo sviluppo del sistema e che stanno causando rallentamenti e malfunzionamenti.
-        </div>
-        <div class="modal-footer">
-            <a href="?p=utente.me&rimandaDeadline" class="btn">
-                <i class="icon-remove"></i> Non ora
-            </a>
-            <a href="?p=comunicato" class="btn btn-success">
-                <i class="icon-ok"></i> Leggi il comunicato
-            </a>
-        </div>
-    </div>
-<?php }
 
 if (!$sessione->rimandaPrivatizzazione && $consenso) {
     foreach($me->comitatiPresidenzianti() as $comitato) {
@@ -122,7 +98,34 @@ if (!$sessione->rimandaPrivatizzazione && $consenso) {
     <?php }
     }
 }
-
+/*
+// C'è il webinar!!!
+if (!$sessione->rimandaPrivatizzazione && $consenso && $me->presidenziante() && !$me->admin) { ?>
+    <div class="modal fade automodal">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3><i class="icon-bullhorn"></i> La formazione online continua...</h3>
+        </div>
+        <div class="modal-body">
+            <p>Hai dubbi su una determinata funzionalità di <i>GAIA</i>? Partecipa ai nostri webinar online!
+                A breve tratteremo i seguenti argomenti:</p>
+            <p>
+            <ul>
+                <li>martedì 4 novembre alle 21.00: <i>Gestione del corso base e dell'aspirante</i></li>
+            </ul>
+            </p>
+            <p>Cliccando su <strong>Maggiori dettagli</strong> potri accedere alla pagina dedicata
+            alla formazione e iscriverti all'incontro online.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Non ora</button>
+            <a href="?p=public.formazione" class="btn btn-primary">
+                <i class="icon-asterisk"></i> Maggiori dettagli
+            </a>
+        </div>
+    </div>
+<?php }
+*/
 /* Noi siamo cattivi >:) */
 // redirect('curriculum');
 
@@ -137,6 +140,7 @@ if ($consenso && $rf) {
     <!-- BLOCCO ATTIVITA DA COMPLETARE -->
     <div class="modal fade automodal">
         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             <h3 class="text-error"><i class="icon-warning-sign"></i> Attività da completare</h3>
         </div>
         <div class="modal-body">
@@ -167,7 +171,7 @@ if ($consenso && $rf) {
             </p>
         </div>
         <div class="modal-footer">
-            <a href="?p=attivita.gestione" class="btn">Non ora</a>
+            <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Non ora</button>
             <a href="?p=attivita.modifica&id=<?php echo $attivita->id; ?>" class="btn btn-primary">
                 <i class="icon-asterisk"></i> Vai all'attività
             </a>
@@ -186,6 +190,7 @@ if ($consenso && $cb && !$rf) {
 
     <div class="modal fade automodal">
         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             <h3 class="text-error"><i class="icon-warning-sign"></i> Corso Base da Completare</h3>
         </div>
         <div class="modal-body">
@@ -215,8 +220,51 @@ if ($consenso && $cb && !$rf) {
             </p>
         </div>
         <div class="modal-footer">
-            <a href="?p=formazione.corsibase" class="btn">Non ora</a>
+            <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Non ora</button>
             <a href="?p=formazione.corsibase.modifica&id=<?php echo $corsoBase->id; ?>" class="btn btn-primary">
+                <i class="icon-asterisk"></i> Vai al corso
+            </a>
+        </div>
+    </div>  
+
+<?php } 
+
+/* Blocco per presidenti con corsi senza direttore */
+
+
+$cs = $me->corsiBaseSenzaDirettore();
+if ($consenso && $cs && !$cb && !$rf) {
+    $attenzione = true;
+    $corsoBase = $cs[0];
+    ?>
+
+    <div class="modal fade automodal">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3 class="text-error"><i class="icon-warning-sign"></i> Corso Base da Completare</h3>
+        </div>
+        <div class="modal-body">
+            <p>Hai attivato un corso base ma non ne hai ancora selezionato il direttore:</p>
+            <hr />
+            <p class="allinea-centro">
+                <strong><?php echo $corsoBase->nome(); ?></strong>
+                <br />
+                <span class="muted">
+                    Organizzatore: <?php echo $corsoBase->organizzatore()->nomeCompleto(); ?>
+                </span>
+            </p>
+            <hr />
+            <h4>Completa i dettagli del corso</h4>
+
+            <p class="text-error">
+                <i class="icon-info-sign"></i> Non appena verranno avrai nominato
+                il direttore del corso questa persona potrà inserire tutte le informazioni
+                necessarie e rendere visibile in corso ai futuri aspiranti.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Non ora</button>
+            <a href="?p=formazione.corsibase.direttore&id=<?php echo $corsoBase->id; ?>" class="btn btn-primary">
                 <i class="icon-asterisk"></i> Vai al corso
             </a>
         </div>
@@ -226,7 +274,7 @@ if ($consenso && $cb && !$rf) {
 
 /* Blocco blocco appartenenza non valida */
 
-if ( $consenso && !$me->appartenenzaValida() ) { ?>
+if ( $consenso && !$me->appartenenzaValida() && !$me->dipendenteComitato ) { ?>
     <div class="modal fade automodal">
         <div class="modal-header">
             <h4 class="text-error"><i class="icon-warning-sign"></i> Seleziona il tuo Comitato</h4>
@@ -290,24 +338,12 @@ if(false && $consenso && !$sessione->barcode) { ?>
 
     <!-- BLOCCO NON MENU -->
     <div class="span9">
-        <h2><span class="muted">Ciao, </span>
-            <?php if ($me->admin()){ ?> <span class="muted">Admin</span> 
-            <?php } elseif ($me->presiede()){ ?><span class="muted">Presidente</span> 
-            <?php } echo $me->nome; ?>.
-        </h2>
 
         <div class="row-fluid">
             <div class="span8">
-                <div class="alert alert-block alert-error">
-                    <div class="row-fluid">
-                        <h4><i class="icon-ok"></i> Ciao <?php echo $me->nome ?></h4>
-                        <p>Per favore prendi qualche minuti di tempo, se non lo hai già fatto,
-                        per leggere un importante comunicato da parte degli sviluppatori di Gaia.</p>
-                        <a href="?p=comunicato" class="btn">
-                            Leggi il comunicato
-                        </a> 
-                    </div>
-                </div>
+                <h2><span class="muted">Ciao </span>
+                    <?= $me->nome; ?>
+                </h2>
                 <?php if (isset($_GET['suppok'])) { $attenzione = true; ?>
                 <div class="alert alert-success">
                     <h4><i class="icon-ok-sign"></i> Richiesta supporto inviata</h4>
@@ -333,12 +369,62 @@ if(false && $consenso && !$sessione->barcode) { ?>
                     <h4><i class="icon-warning-sign"></i> <strong>Nessun destinatario valido</strong>.</h4>
                     <p>L'email che stavi inviando non può essere spedita.</p>
                 </div> 
-                <?php } if (!$me->wizard) { $attenzione = true;  ?>
+                <?php } 
+                // blocco JUMP 
+                ?>
+                
+                <!--
+                <div class="alert alert-block alert-info">
+                    <div class="row-fluid">
+                        <div class="span9">
+                            <h4>Aperta la call per i ruoli tecnici in GAIA</h4>
+                                <p>Gaia continua a crescere, adesso ha bisogno anche di te!</p> 
+                                <p>Siamo alla ricerca di: <strong>Sviluppatori Web (tutte le tecnologie), Analisti, Web Designer e molto altro</strong>.</p>
+                                Regalati un'esperienza di Volontariato tutta nuova. <a href="http://www.cri.it/flex/cm/pages/ServeBLOB.php/L/IT/IDPagina/24818" target="_blank"><i class="icon-link"></i> Clicca qui.</a></p>
+                        </div>
+                        <div class="span3">
+                            <a href="http://www.cri.it/flex/cm/pages/ServeBLOB.php/L/IT/IDPagina/24818" target="_blank"><img src="/img/ruolitecnici.png" /></a>
+                        </div>
+                    </div>
+                </div>
+                -->
+                <!--
+                <div class="alert alert-block alert-info">
+                    <div class="row-fluid">
+                        <div class="span9">
+                            <h4>Aperta la call per l'help desk di GAIA</h4>
+                                <p>Gaia continua a crescere, adesso ha bisogno anche di te!</p> 
+                                <p>Siamo alla ricerca di personale helpdesk da inserire nel nostro team di <strong>1° livello</strong>.</p>
+                                Vuoi essere dei nostri? <a href="http://www.cri.it/flex/cm/pages/ServeBLOB.php/L/IT/IDPagina/24760" target="_blank"><i class="icon-link"></i> Clicca qui.</a></p>
+                                  </div>
+                                <div class="span3">
+                            <a href="http://www.cri.it/flex/cm/pages/ServeBLOB.php/L/IT/IDPagina/24760" target="_blank"><img src="/img/pulsantehelp.png" /></a>
+                        </div>
+                    </div>
+                </div>
+                -->
+                <!-- BLOCCO SENZA IMMAGINE
+                <div class="alert alert-block alert-info">
+                    <div class="row-fluid">
+                        
+                            <h4><strong>Formazione online sui tesserini!</strong></h4>
+                            <p>Il giorno 19/12/2014 alle ore 15.30 ci sarà il <strong>primo</strong> appuntamento di formazione sull'utilizzo di questa nuova funzionalità!.</p> 
+                             <p>L'evento è principalmente destinato agli uffici soci dei comitati. </a></p>
+                             
+                            <p><a href="https://attendee.gotowebinar.com/register/103686508739557377" class="btn btn-large"><i class="icon-ok"></i> Iscriviti subito!</a></p>
+
+                      
+                    </div>
+                </div>-->
+                
+                <?php
+                // fine blocco jump
+                if (!$me->wizard) { $attenzione = true;  ?>
                 <div class="alert alert-block alert-error">
                     <h4><i class="icon-warning-sign"></i> Completa il tuo profilo</h4>
                     <p>Inserisci titoli, patenti, certificazioni e competenze dalla sezione curriculum.</p>        
                     <p><a href="?p=utente.titoli&t=0" class="btn btn-large"><i class="icon-ok"></i> Clicca qui per iniziare</a></p>
-                </div> 
+                </div>
                 <?php } elseif (!$me->ordinario()) { ?>
                 <div class="alert alert-block alert-success">
                     <div class="row-fluid">
@@ -391,6 +477,15 @@ if(false && $consenso && !$sessione->barcode) { ?>
                     </div>
                 <?php } 
 
+                /* Utente con provvedimento */
+
+                if($me->provvedimento()){ ?>
+                    <div class="alert alert-block">
+                        <h4><i class="icon-legal"></i> Provvedimento in corso</h4>
+                        <p>Sei sottoposto ad un provvedimento disciplinare, ottieni maggiori informazioni consultando il tuo storico.</p>
+                    </div>
+                <?php } 
+
                 /* Presto iscriviti ad un gruppo! */
 
                 if ( $me->comitati() && $me->gruppiDisponibili() ) { 
@@ -430,25 +525,25 @@ if(false && $consenso && !$sessione->barcode) { ?>
                     <p>Ricordati di caricare i tuoi documenti dalla sezione <strong>Documenti</strong>.</p>
                 </div>
 
-                <?php }
-                if ( !$attenzione && $me->comitatiDiCompetenza() ) { ?>
-                <div class="alert alert-block alert-warning">
-                    <h4><i class="icon-warning-sign"></i> Dov'è finito il pannello presidente?</h4>
-                    <p>Nel menù di sinistra, alla voce <strong>Presidente</strong>.</p>
-                </div>
                 <?php } ?>
             </div>
 
             <!-- PANNELLO ULTIME EMAIL -->
             <div class="span4">
-                <h4><i class="icon-time"></i> Ultime comunicazioni</h4>
-                
-                <div
-                    data-posta      ="true"
-                    data-direzione  ="ingresso"
-                    data-perPagina  ="5"
-                    data-mini       ="true"
-                ></div>
+                <div class="row-fluid">
+                    <h4><i class="icon-time"></i> Ultime comunicazioni</h4>
+                    
+                    <div
+                        data-posta      ="true"
+                        data-direzione  ="ingresso"
+                        data-perPagina  ="5"
+                        data-mini       ="true"
+                    ></div>
+                </div>
+                <div class="row-fluid">
+                    <a class="twitter-timeline" href="https://twitter.com/progettogaiacri/gaia-update" data-widget-id="441278779487305729">Tweets from https://twitter.com/progettogaiacri/gaia-update</a>
+                    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+                </div>
             </div>
         </div>
     </div>

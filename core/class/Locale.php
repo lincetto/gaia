@@ -10,6 +10,8 @@ class Locale extends GeoPolitica {
         $_t  = 'locali',
         $_dt = 'datiLocali';
 
+    use EntitaCache;
+
     public static 
         $_ESTENSIONE = EST_LOCALE;
 
@@ -18,8 +20,12 @@ class Locale extends GeoPolitica {
         return $this->nome;
     }
     
-    public function estensione() {
-        return $this->comitati();
+    public function estensione($soloComitati = true) {
+        $r = [];
+        if(!$soloComitati) {
+            $r[] = $this;
+        }
+        return array_merge($r, $this->comitati());
     }
 
     public function figli() {

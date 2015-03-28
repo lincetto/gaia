@@ -33,6 +33,7 @@ $t = Utente::by('id',$f);
         <?php }elseif (isset($_GET['unitelepass'])) { ?><form class="form-horizontal" action="?p=utente.mail.nuova.ok&unitelepass&time=<?php echo $_GET['time']; ?>&id=<?php echo $f; ?>" method="POST">
         <?php }elseif (isset($_GET['gruppo'])) { ?><form class="form-horizontal" action="?p=utente.mail.nuova.ok&gruppo&id=<?php echo $f; ?>" method="POST">
         <?php }elseif (isset($_GET['estesi'])) { ?><form class="form-horizontal" action="?p=utente.mail.nuova.ok&estesi&id=<?php echo $f; ?>" method="POST">
+        <?php }elseif (isset($_GET['estensione'])) { ?><form class="form-horizontal" action="?p=utente.mail.nuova.ok&estensione&id=<?php echo $f; ?>" method="POST">
         <?php }elseif (isset($_GET['riserva'])) { ?><form class="form-horizontal" action="?p=utente.mail.nuova.ok&riserva&id=<?php echo $f; ?>" method="POST">
         <?php }elseif (isset($_GET['zeroturnicom'])) { ?><form class="form-horizontal" action="?p=utente.mail.nuova.ok&zeroturnicom&time=<?php echo $_GET['time']; ?>" method="POST">
         <?php }elseif (isset($_GET['zeroturniunit'])) { ?><form class="form-horizontal" action="?p=utente.mail.nuova.ok&zeroturniunit&id=<?php echo $_GET['id']; ?>&time=<?php echo $_GET['time']; ?>" method="POST">
@@ -58,9 +59,11 @@ $t = Utente::by('id',$f);
             || isset($_GET['unitelepass'])
             || isset($_GET['gruppo'])
             || isset($_GET['estesi'])
+            || isset($_GET['estensione'])
             || isset($_GET['riserva']) 
             || isset($_GET['zeroturnicom']) 
-            || isset($_GET['zeroturniunit']) ) { 
+            || isset($_GET['zeroturniunit'])
+            || isset($_GET['ordinaricom'])) { 
             ?>
             <div class="control-group">
               <label class="control-label" for="inputV">Destinatari</label>
@@ -80,13 +83,13 @@ $t = Utente::by('id',$f);
             <div class="control-group">
               <label class="control-label" for="inputOggetto">Oggetto</label>
               <div class="controls">
-                <input type="text" class="span6" name="inputOggetto" id="inputOggetto" required>
+                <input type="text" class="span6" name="inputOggetto" id="inputOggetto" placeholder="Inserire qui l'oggetto della mail" required>
               </div>
             </div>
             <div class="control-group">
             <label class="control-label" for="inputTesto">Testo</label>
             <div class="controls">
-              <textarea rows="10" class="input-xxlarge conEditor" type="text" id="inputTesto" name="inputTesto" placeholder="Inserisci il testo della tua mail qui..."></textarea>
+              <textarea rows="10" class="input-xlarge conEditor" type="text" id="inputTesto" name="inputTesto" placeholder="Inserisci il testo della tua mail qui..."></textarea>
             </div>
           </div>
             <div class="form-actions">

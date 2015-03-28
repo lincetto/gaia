@@ -11,7 +11,7 @@ controllaParametri(array('id'));
 $v = $_GET['id'];
 $v = Volontario::id($v);
 ?>
-<script type="text/javascript"><?php require './js/presidente.utenti.js'; ?></script>
+<script type="text/javascript"><?php require './assets/js/presidente.utenti.js'; ?></script>
 <br/>
 <div class="row-fluid">
     <div class="span5 allinea-sinistra">
@@ -22,14 +22,8 @@ $v = Volontario::id($v);
         <p>Volontario: <strong><?= $v->nomeCompleto(); ?></strong></p>
     </div>
             
-            <div class="span3">
-                <div class="btn-group btn-group-vertical span12">
-                    <a href="?p=presidente.turni.zero" class="btn btn-block">
-                        <i class="icon-reply"></i>
-                        Torna indietro
-                    </a>
-                </div>
-            </div>
+        <div class="span3">
+        </div>
     
     <div class="span4 allinea-destra">
         <div class="input-prepend">

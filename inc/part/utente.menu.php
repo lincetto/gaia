@@ -25,9 +25,10 @@ if ( $me && ($me->admin() || $me->delegazioneAttuale()->applicazione == APP_PRES
 }
 
 if ($me && (!$me->admin() && $me->delegazioneAttuale()->applicazione == APP_SOCI)) {
-$_n     =   $_n_titoli = $_n_app = 0;
-$_n     +=  $_n_titoli = $me->numTitoliPending  ([APP_PRESIDENTE, APP_SOCI]);
-$_n     +=  $_n_app    = $me->numAppPending     ([APP_PRESIDENTE, APP_SOCI]);
+$_n     =   $_n_titoli = $_n_app = $_n_foto = 0;
+$_n     +=  $_n_titoli = $me->numTitoliPending      ([APP_PRESIDENTE, APP_SOCI]);
+$_n     +=  $_n_app    = $me->numAppPending         ([APP_PRESIDENTE, APP_SOCI]);
+$_n     +=  $_n_foto   = $me->numFototesserePending ([APP_PRESIDENTE, APP_SOCI]);
 
     $menu[''] += [
         'us.dash'   =>  '<span class="badge badge-success">'.$_n.'</span> Ufficio Soci'
@@ -44,17 +45,24 @@ if ( $presidente || ($me && $me->delegazioneAttuale()->applicazione == APP_CO)) 
     ];
 }
 
-/*
- * blocco commentato per permettere merge!!!
-if ( $presidente || $me->delegazioni(APP_FORMAZIONE) || $me->corsiBaseDiGestione()) {
+/* blocco aspiranti */
+if ( $presidente || 
+     ($me && $me->delegazioneAttuale()->applicazione == APP_FORMAZIONE) || 
+     ($me && $me->corsiBaseDiGestione()) ) {
     $menu[''] += [
         'formazione.corsibase'   =>  '<span class="badge badge-success">&nbsp;</span> Corsi Base'
     ];
 }
-*/
+
 if ( $presidente || ($me && $me->delegazioneAttuale()->applicazione == APP_OBIETTIVO)) {
     $menu[''] += [
         'obiettivo.dash'   =>  '<span class="badge badge-success">&nbsp;</span> Delegato d\'Area'
+    ];
+}
+
+if ( $presidente || ($me && $me->delegazioneAttuale()->applicazione == APP_AUTOPARCO)) {
+    $menu[''] += [
+        'autoparco.dash'   =>  '<span class="badge badge-success">&nbsp;</span> Autoparco'
     ];
 }
 
@@ -97,7 +105,8 @@ if ($me && $me->unComitato()) {
             'utente.estensione'  =>  '<i class="icon-random"></i> Estensioni',
             'utente.trasferimento'  =>  '<i class="icon-arrow-right"></i> Trasferimenti',
             'utente.riserva'  =>  '<i class="icon-pause"></i> Riserva',
-            'utente.rubricaReferenti'  =>  '<i class="icon-book"></i> Rubrica'  
+            'utente.rubricaReferenti'  =>  '<i class="icon-book"></i> Rubrica',
+            'public.tesserino'  =>  '<i class="icon-credit-card"></i> Verifica Tesserino'  
         ]];
 }
 $menu += [
@@ -107,9 +116,6 @@ $menu += [
         'utente.titoli&t=2' =>  '<i class="icon-ambulance"></i> Patenti CRI',
         'utente.titoli&t=3' =>  '<i class="icon-beaker"></i> Titoli di studio',
         'utente.titoli&t=4' =>  '<i class="icon-plus-sign-alt"></i> Titoli CRI'
-    ],
-    'Impostazioni' =>  [
-        'utente.password'     =>   '<i class="icon-key"></i> Password'
     ],
     'Statistiche' =>  [
         'utente.statistiche.volontari'     =>   '<i class="icon-puzzle-piece"></i> Volontari'

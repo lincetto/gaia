@@ -4,6 +4,7 @@
 * ©2013 Croce Rossa Italiana
 */
 
+set_time_limit(0);
 paginaAnonimo();
 caricaSelettore();
 
@@ -20,11 +21,20 @@ if ($me instanceof Anonimo) {
 }
 
 $geoComitato = GeoPolitica::daOid($a->comitato);
+
+$modificabile = $a->modificabileDa($me);
+if ( $modificabile ) {
+    $dominio = $me->dominioCompetenzaAttivita($a);
+}
+
 $_titolo = $a->nome . ' - Attività CRI su Gaia';
 $_descrizione = $a->luogo . " || Aperto a: " . $conf['att_vis'][$a->visibilita]
 ." || Organizzato da " . $geoComitato->nomeCompleto();
 
 $g = Gruppo::by('attivita', $a);
+
+$apertura = $a->apertura;
+
 if ( isset($_GET['riapri']) ) { ?>
 <script type='text/javascript'>
 $(document).ready( function() {
@@ -58,33 +68,54 @@ $(document).ready( function() {
                     <h4>Gruppo di lavoro creato con successo &mdash; <?php echo date('d-m-Y H:i:s'); ?></h4>
                 </div>
             <?php } ?>
+            <?php if ($sessione->errori) { 
+                $errori = json_decode($sessione->errori);
+                foreach ($errori as $errore) { ?>
+                    <div class='alert alert-block alert-danger'>
+                        <h4>Il turno <?= $errore; ?> e' stato creato, ma la data di fine e' antecedente a quella di inzio</h4>
+                        <h5>Per favore correggi le date!</h5>
+                    </div>
+            <?php } } 
+            $sessione->errori = null;
+            ?>
+
 
             <div class="span8 btn-group">
-                <?php if ( $a->modificabileDa($me) ) { ?>
-                <a href="?p=attivita.modifica&id=<?php echo $a->id; ?>" class="btn btn-large btn-info">
-                    <i class="icon-edit"></i>
-                    Modifica
-                </a>
-                <a href="?p=attivita.turni&id=<?= $a ?>" class="btn btn-primary btn-large">
-                    <i class="icon-calendar"></i> Turni
-                </a>
-                <a href="?p=attivita.cancella&id=<?= $a->id; ?>" class="btn btn-large btn-danger" title="Cancella attività e tutti i turni">
-                    <i class="icon-trash"></i>
-                </a>
-                <?php if (!$g && $a->comitato()->_estensione() < EST_NAZIONALE){ ?>
-                    <a class="btn btn-large btn-success" href="?p=attivita.gruppo.nuovo&id=<?php echo $a->id; ?>" itle="Crea nuovo gruppo di lavoro">
-                        <i class="icon-group"></i> Crea gruppo
+                <?php if ( $apertura && $modificabile ) { ?>
+                    <a href="?p=attivita.modifica&id=<?php echo $a->id; ?>" class="btn btn-large btn-info">
+                        <i class="icon-edit"></i>
+                        Modifica
                     </a>
-                <?php }} ?>
+                    <a href="?p=attivita.turni&id=<?= $a ?>" class="btn btn-primary btn-large">
+                        <i class="icon-calendar"></i> Turni
+                    </a>
+                    <a href="?p=attivita.cancella&id=<?= $a->id; ?>" class="btn btn-large btn-danger" title="Cancella attività e tutti i turni">
+                        <i class="icon-trash"></i>
+                    </a>
+                    <?php if (!$g && $a->comitato()->_estensione() < EST_NAZIONALE){ ?>
+                        <a class="btn btn-large btn-success" href="?p=attivita.gruppo.nuovo&id=<?php echo $a->id; ?>" title="Crea nuovo gruppo di lavoro">
+                            <i class="icon-group"></i> Crea gruppo
+                        </a>
+                    <?php }
+                } ?>
                 <a class="btn btn-large btn-primary" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo urlencode("https://gaia.cri.it/index.php?p=attivita.scheda&id={$a->id}"); ?>" target="_blank">
                     <i class="icon-facebook-sign"></i> Condividi
                 </a>
+                <?php if ( !$apertura ){ ?>
+                    <a class="btn btn-large btn-danger disabled" <?php if ($a->modificabileDa($me)){ ?> onclick="return confirm('Vuoi nuovamente aprire l\'attività?');" href="?p=attivita.apertura.ok&id=<?=$a->id; ?>&apri" <?php } ?>>
+                            <i class="icon-lock"></i>
+                            Attività chiusa
+                    </a>
+                <?php } ?>
+
             </div>
             <div class="span4 allinea-destra">
                 <span class="muted">
                     <strong>Ultimo aggiornamento</strong>:<br />
                     <i class="icon-time"></i> <?php echo date("d/m/Y H:i:s", $a->timestamp); ?>
                 </span>
+                <!-- Box Like/Dislike -->
+                <div data-like="<?= $a->oid(); ?>" class="pull-right"></div>
             </div>
         </div>
         <hr />
@@ -193,7 +224,7 @@ $(document).ready( function() {
                 <form id="boxScrivi" action="?p=attivita.pagina.commento.ok&id=<?php echo $a->id; ?>" method="POST" class="row-fluid <?php if ( $commenti ) { ?>nascosto<?php } ?>">
                     <div class="span9">
                         <textarea name="inputCommento" autofocus placeholder="Scrivi il tuo messaggio..." rows="3" class="span12"></textarea>
-                        <?php if ( $a->modificabileDa($me) ) { ?>
+                        <?php if ( $modificabile ) { ?>
                         <label>
                             <input type="checkbox" checked name="annuncia" />
                             <strong>
@@ -226,7 +257,7 @@ $(document).ready( function() {
                                         <a href="?p=profilo.controllo&id=<?php echo $autore->id; ?>" target="_new"><?php echo $autore->nomeCompleto(); ?></a></strong>,
                                         <?php echo $c->quando()->inTesto(); ?>
                                     </small>
-                                    <?php if ( $me->id == $autore->id || $a->modificabileDa($me) ) { ?>
+                                    <?php if ( $me->id == $autore->id || $modificabile ) { ?>
                                     <a class="pull-right text-warning" href="?p=attivita.pagina.commento.cancella&id=<?php echo $c->id; ?>">
                                         <small>
                                             <i class="icon-trash"></i>
@@ -236,7 +267,23 @@ $(document).ready( function() {
                                     <?php } ?>
                                     <p class="text"><?php echo $c->commento; ?></p>
                                     <?php $r = $c->risposte(); ?>
-                                    <small><a href="?p=attivita.pagina&id=<?= $a->id; ?>#<?= $c->id; ?>"><i class="icon-comment"></i> <?php if (count($r)==0){ ?> Nessun comento<?php }elseif(Count($r)==1){ echo count($r); ?> Commento<?php }else{ echo count($r); ?> Commenti<?php } ?></a></small>
+                                    <small>
+                                        <a href="?p=attivita.pagina&id=<?= $a->id; ?>#<?= $c->id; ?>">
+                                            <i class="icon-comment"></i>
+                                            <?php if (count($r)==0){ ?> 
+                                                 Nessun commento
+                                            <?php } elseif (count($r)==1) { ?>
+                                                 <?= count($r); ?>
+                                                 Commento
+                                            <?php } else { ?> 
+                                                 <?= count($r); ?>
+                                                 Commenti
+                                            <?php } ?>
+                                        </a>
+                                    </small>
+                                    <!-- Box Like/Dislike -->
+                                    <div data-like="<?= $c->oid(); ?>" data-piccolo="true" class="pull-right"></div>
+
                                 </div>
                             </div>
                             <?php } ?>
@@ -257,7 +304,7 @@ $(document).ready( function() {
                         <h2><i class="icon-time"></i> Elenco turni dell'Attività</h2>
                     </div>
                     <div class="span4">
-                        <?php if ( $a->modificabileDa($me) ) { ?>
+                        <?php if ( $modificabile ) { ?>
                         <a href="?p=attivita.report&id=<?php echo $a->id; ?>" class="btn btn-large btn-block btn-primary" data-attendere="Generazione in corso...">
                             <i class="icon-download-alt"></i> Scarica report excel
                         </a>
@@ -319,7 +366,7 @@ $(document).ready( function() {
                             <?php if(!$anonimo) {?>
                             <a data-toggle="modal" data-target="#turno_<?php echo $turno->id; ?>"><i class="icon-list"></i> Vedi tutti i volontari</a>
                             <?php }
-                            if ( $a->modificabileDa($me) ) { ?>
+                            if ( $modificabile ) { ?>
                             (<a data-toggle="modal" data-target="#turno_<?php echo $turno->id; ?>"><i class="icon-plus"></i> Aggiungi</a>)
                             <?php } ?>
 
@@ -360,21 +407,26 @@ $(document).ready( function() {
                                                                 echo "</span>";
                                                         ?>
                                                     </a>
-                                                    <?php if( $me->delegazioni(APP_CO) && $a->modificabileDa($me) && $potere){ ?>
+                                                    <?php if( $me->delegazioni(APP_CO) && $modificabile && $potere){ ?>
                                                     <a class="btn btn-small" href="?p=attivita.poteri&v=<?= $v->id; ?>&turno=<?= $turno; ?>">
                                                         <i class="icon-rocket" ></i> Conferisci poteri
                                                     </a>
                                                     <?php } ?>
-                                                    <?php if( $a->modificabileDa($me) && $turno->fine >= time() && $turno->inizio >= time() ){ ?>
+                                                    <?php if( $modificabile && $turno->fine >= time() && $turno->inizio >= time() ){ ?>
                                                     <a class="btn btn-small btn-danger" href="?p=attivita.modifica.volontario.rimuovi&v=<?= $v->id; ?>&turno=<?= $turno; ?>">
                                                         <i class="icon-trash" ></i> Rimuovi volontario
+                                                    </a>
+                                                    <?php } ?>
+                                                    <?php if( $modificabile ){ ?>
+                                                    <a class="btn btn-small btn-danger" href="?p=attivita.modifica.volontario.assente&v=<?= $v->id; ?>&turno=<?= $turno; ?>">
+                                                        <i class="icon-remove" ></i> Volontario assente
                                                     </a>
                                                     <?php } ?>
                                                 </li>
                                                 <?php } ?>
                                             </ul>
 
-                                            <?php if ( $a->modificabileDa($me) ) { ?>
+                                            <?php if ( $modificabile ) { ?>
 
                                             <hr />
                                             <?php
@@ -407,7 +459,7 @@ $(document).ready( function() {
                                                     <a href="?p=profilo.controllo&id=<?php echo $v->id; ?>" target="_new">
                                                         <?php echo $v->nomeCompleto(); ?>
                                                     </a>
-                                                    <?php if( $turno->futuro() && $a->modificabileDa($me) ){ ?>
+                                                    <?php if( $turno->futuro() && $modificabile ){ ?>
                                                         <a class="btn btn-small btn-success" href="?p=attivita.modifica.volontario.autorizza&v=<?= $v->id; ?>&turno=<?= $turno; ?>">
                                                             <i class="icon-ok-sign" ></i> Autorizza volontario
                                                         </a>
@@ -418,14 +470,14 @@ $(document).ready( function() {
                                             <?php } ?>
                                         </div>
                                         <div class="span5">
-                                            <?php if ( $a->modificabileDa($me) ) { ?>
+                                            <?php if ( $modificabile ) { ?>
                                             <form action="?p=attivita.modifica.volontari.aggiungi&id=<?php echo $a->id; ?>" method="POST">
                                                 <input type="hidden" name="turno" value="<?php echo $turno->id; ?>" />
                                                 <a data-selettore="true" 
                                                    data-input="volontari" 
                                                    data-autosubmit="true" 
                                                    data-multi="true" 
-                                                   data-comitati="<?php echo $a->comitato; ?>"
+                                                   data-comitati="<?php echo $dominio->oid(); ?>"
                                                    class="btn btn-block btn-primary btn-large btn-success">
                                                     <i class="icon-plus"></i>
                                                     Aggiungi volontari

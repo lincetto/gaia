@@ -9,6 +9,8 @@ class Provinciale extends GeoPolitica {
     protected static
         $_t  = 'provinciali',
         $_dt = 'datiProvinciali';
+
+    use EntitaCache;
     
     public static 
         $_ESTENSIONE = EST_PROVINCIALE;
@@ -17,10 +19,13 @@ class Provinciale extends GeoPolitica {
         return $this->nome;
     }
     
-    public function estensione() {
+    public function estensione($soloComitati = true) {
         $r = [];
+        if(!$soloComitati) {
+            $r[] = $this;
+        }
         foreach  ( $this->locali() as $l ) {
-            $r = array_merge($l->estensione(), $r);
+            $r = array_merge($l->estensione($soloComitati), $r);
         }
         return array_unique($r);
     }

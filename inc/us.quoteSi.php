@@ -7,8 +7,7 @@
 paginaApp([APP_SOCI , APP_PRESIDENTE]);
 
 ?>
-<script type="text/javascript"><?php require './js/presidente.utenti.js'; ?></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.9/angular.min.js"></script>
+<script type="text/javascript"><?php require './assets/js/presidente.utenti.js'; ?></script>
 <?php if ( isset($_GET['ok']) ) { ?>
         <div class="alert alert-success">
             <i class="icon-save"></i> <strong>Quota registrata</strong>.
@@ -32,7 +31,7 @@ paginaApp([APP_SOCI , APP_PRESIDENTE]);
     <div class="span5 allinea-sinistra">
         <h2>
             <i class="icon-group muted"></i>
-            Quote Pagate (attivi)
+            Quote Registrate (attivi)
         </h2>
     </div>
             
@@ -41,7 +40,7 @@ paginaApp([APP_SOCI , APP_PRESIDENTE]);
             <div class="btn-group">
                 <a class="btn dropdown-toggle btn-success" data-toggle="dropdown">
                     <i class="icon-ok"></i>
-                    Quote Pagate   
+                    Quote Registrate   
                     <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
@@ -90,8 +89,8 @@ paginaApp([APP_SOCI , APP_PRESIDENTE]);
     <div class="span3 allinea-centro">
 
         <div class="well">
-            <i class="icon-certificate"></i> Ad oggi sono state pagate<br />
-            <span class="quote_contatore"> {{quote}}</span>
+            <i class="icon-certificate"></i> Ad oggi sono state registrate<br />
+            <span class="quote_contatore" id="c_quote">...</span>
             <br />
             <span class="aspiranti_descrizione">QUOTE</span>
         </div>
@@ -101,7 +100,7 @@ paginaApp([APP_SOCI , APP_PRESIDENTE]);
     <div class="span6 allinea-centro">
         <div class="well">
             <i class="icon-money"></i> Attualmente sono stati raccolti<br />
-            <span class="quote_contatore"> {{incasso}} €</span>
+            <span class="quote_contatore" id="c_incasso">...</span>
             <br />
             <span class="aspiranti_descrizione">DAL TESSERAMENTO</span>
         </div>
@@ -110,7 +109,7 @@ paginaApp([APP_SOCI , APP_PRESIDENTE]);
     <div class="span3 allinea-centro">
         <div class="well">
             <i class="icon-thumbs-up-alt"></i> Attualmente sono presenti<br />
-            <span class="quote_contatore"> {{benemeriti}}</span>
+            <span class="quote_contatore" id="c_benemeriti">...</span>
             <br />
             <span class="aspiranti_descrizione">SOSTENITORI</span>
         </div>
@@ -136,6 +135,7 @@ paginaApp([APP_SOCI , APP_PRESIDENTE]);
                 <th>Codice Fiscale</th>
                 <th>Quota</th>
                 <th>Data Pagamento</th>
+                <th>Pagamento effettuato</th>
                 <th>Azioni</th>
             </thead>
         <?php
@@ -153,7 +153,7 @@ paginaApp([APP_SOCI , APP_PRESIDENTE]);
                 ?>
             
             <tr class="success">
-                <td colspan="7" class="grassetto">
+                <td colspan="8" class="grassetto">
                     <?php echo $comitato->nomeCompleto(); ?>
                     <span class="label label-warning">
                         <?php echo count($t); ?>
@@ -169,10 +169,14 @@ paginaApp([APP_SOCI , APP_PRESIDENTE]);
             <?php
             foreach ( $t as $_v ) {
                 $n++;
+
+                $q = $_v->quotaSocioAttivo($anno);
+
+                // Controlla se la quota e' del mio comitato
+                $quotaMia = $q->comitato()->id == $comitato->id;
             ?>
-                <tr>
+                <tr class="<?= !$quotaMia ? 'warning' : ''; ?>">
                     <td><?php
-                            $q = $_v->quota($anno);
                             echo $q->progressivo();
                         ?>
                     </td>
@@ -181,17 +185,33 @@ paginaApp([APP_SOCI , APP_PRESIDENTE]);
                     <td><?php echo $_v->codiceFiscale; ?></td>
                     
                     <td>
+
+                        <?php if ( !$quotaMia ) { ?>
+                            <acronym class="text-error" title="Questa quota &egrave; stata pagata presso il <?= $q->comitato()->nomeCompleto(); ?>. Non &egrave; inclusa nel totale.">
+                        <?php } ?>
+
                         <?php 
-                            $totale += (float) $q->quota;
+
+                            if ( $quotaMia )
+                               $totale += (float) $q->quota;
+
                             if ($q->benemerita()) { 
                                 $ben++;
                                 echo('€ ' . soldi($q->quota)); ?>
                                 <i class="icon-thumbs-up-alt"></i> Sostenitore
                             <?php    } else { 
                                 echo('€ ' . soldi($q->quota));
-                             }?>
+                             }
+                             ?>
+
+                         <?php if ( !$quotaMia ) { ?>
+                             <i class="icon-warning-sign"></i>
+                            </acronym>
+                         <?php } ?>
                     </td>
                     <td><?php echo $q->dataPagamento()->inTesto(false); ?></td>
+
+                    <td><?= $q->conferma()->nomeCompleto(); ?></td>
 
                     <td>
                         <div class="btn-group">
@@ -216,9 +236,15 @@ paginaApp([APP_SOCI , APP_PRESIDENTE]);
         ?>
 
         </table>
-        <input type="hidden" ng-model="quote" ng-init="quote= '<?php echo $n; ?>'">
-        <input type="hidden" ng-model="benemeriti" ng-init="benemeriti= '<?php echo $ben; ?>'">
-        <input type="hidden" ng-model="incasso" ng-init="incasso= '<?php echo soldi($totale); ?>'">
+
+        <script type="text/javascript">
+            $(function() {
+                // Aggiorna i contatori...
+                $("#c_quote")       .text("<?= $n; ?>");
+                $("#c_benemeriti")  .text("<?= $ben; ?>");
+                $("#c_incasso")     .html("<?= soldi($totale); ?> &euro;");
+            });
+        </script>
     </div>
     
 </div>

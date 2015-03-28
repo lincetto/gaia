@@ -16,6 +16,8 @@ $id = $_GET['t'];
 $p = Utente::id($id);
 proteggiDatiSensibili($p);
 
+$admin = $me->admin();
+
 $dnascita       = DT::createFromFormat('d/m/Y', $_POST['inputDataNascita']);
 $dnascita       = $dnascita->getTimestamp();
 $prnascita      = maiuscolo($_POST['inputProvinciaNascita']);
@@ -49,15 +51,34 @@ $p->timestamp           = time();
  * Non si può far parte di IV e CM contemporaneamente
  */
 
-if ( !(isset($_POST['inputIV']) && isset($_POST['inputCM']))) {
-    if( $p->sesso == DONNA){
-        $p->iv = $_POST['inputIV'];
-    }
+$x=0;
+if ( $_POST['inputIV'] && $p->sesso == DONNA ){
+    $p->iv = $_POST['inputIV'];
+    $x++;
+}
+
+if( $_POST['inputCM'] && $p->sesso == UOMO){
+    $p->cm = $_POST['inputCM'];
+    $x++;
+}
+
+if( !$_POST['inputCM'] && !$_POST['inputIV']){
+    $p->iv = false;
+    $p->cm = false;
+    $x++;
+}
+
+if ( $x == 0 ){
+    redirect('presidente.utente.visualizza&sesso&id='.$id);
+}
+
+if( $admin ){
+    $p->iv = $_POST['inputIV'];
     $p->cm = $_POST['inputCM'];
 
 }
 
-if ($me->admin()) {
+if ($admin) {
     $nome               = normalizzaNome($_POST['inputNome']);
     $cognome            = normalizzaNome($_POST['inputCognome']);
     $sesso              = $_POST['inputSesso'];
@@ -72,6 +93,9 @@ if ($me->admin()) {
         redirect('presidente.utente.visualizza&email&id='.$_GET['t']);
     }
 
+    if ( $p->codiceFiscale != $codiceFiscale && Utente::by('codiceFiscale', $codiceFiscale) )
+            redirect('presidente.utente.visualizza&cf&id='.$_GET['t']);
+
     $p->nome            = $nome;
     $p->cognome         = $cognome;
     $p->sesso           = ($sesso) ? UOMO : DONNA;
@@ -80,4 +104,4 @@ if ($me->admin()) {
     $p->stato           = $stato;
 }
 
-redirect('presidente.utente.visualizza&ok&id='.$_GET['t']);
+redirect('presidente.utente.visualizza&ok&id='.$id);

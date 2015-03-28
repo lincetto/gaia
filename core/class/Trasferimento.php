@@ -7,8 +7,10 @@
 class Trasferimento extends Entita {
 
     protected static
-    $_t  = 'trasferimenti',
-    $_dt = null;
+        $_t  = 'trasferimenti',
+        $_dt = null;
+
+    use EntitaCache;
     
     public function volontario() {
         return Volontario::id($this->volontario);
@@ -45,15 +47,16 @@ class Trasferimento extends Entita {
         global $sessione;    
         $v = $this->volontario();
 
-        $this->tCOnferma = time();
+        $this->tConferma = time();
         $this->pConferma = $sessione->utente();
         $this->negazione = $motivo;
+        $this->stato     = TRASF_NEGATO;
 
         /* rimetto a posto l'appartenenza attuale */
 
         $a = Appartenenza::id($this->appartenenza);
         $a->timestamp = time();
-        $a->stato     = TRASF_NEGATO;
+        $a->stato     = MEMBRO_TRASF_NEGATO;
         $a->conferma  = $this->pConferma;    
         $a->inizio = time();
         $a->fine = time();
@@ -80,9 +83,9 @@ class Trasferimento extends Entita {
         $m->accoda();
     }
 
-    public function trasferisci($auto = false) 
-    {
-        $this->tConferma = time();
+    public function trasferisci($auto = false) {
+        $ora = time();
+        $this->tConferma = $ora;
         if ($auto) {
             $this->stato = TRASF_AUTO;
         } else {
@@ -93,7 +96,7 @@ class Trasferimento extends Entita {
         
         $v = $this->volontario();
         $a = $v->appartenenzaAttuale();
-        $c = $v->unComitato();
+        $c = $a->comitato();
 
         /* Chiusura delle estensioni in corso*/
         $e = Estensione::filtra([
@@ -111,18 +114,24 @@ class Trasferimento extends Entita {
             ['stato', RISERVA_OK]
             ]);
 
-        foreach ($r as $_r)
-        {
-            $_r->fine = time();
+        foreach ($r as $_r) {
+            $_r->fine = $ora;
             $_r->stato = RISERVA_INT;
         }
 
         /* Chiudo tutto ciò che è legato all'appartenenza attuale */
 
         // chiudo le deleghe su quel comitato
-        $d = $v->delegazioni(null, $c->id);
+        $presidente = $c->primoPresidente();
+
+        $d = Delegato::filtra([
+            ['volontario', $v]
+        ]);
+
         foreach ($d as $_d) {
-            $_d->fine = $ora;
+            if( $_d->attuale() ){
+                $_d->fine = $ora;
+            }
         }
 
         // chiudo le attività referenziate
@@ -131,7 +140,6 @@ class Trasferimento extends Entita {
             ['comitato',    $c->id]
             ]);
         
-        $presidente = $c->primoPresidente();
         foreach ($att as $_att) {
             $_att->referente = $presidente->id;
         }
@@ -142,8 +150,7 @@ class Trasferimento extends Entita {
             ['comitato', $c->id]
             ]);
 
-        foreach ($g as $_g) 
-        {
+        foreach ($g as $_g) {
             $_g->referente = $presidente->id;
         }
 
@@ -152,8 +159,7 @@ class Trasferimento extends Entita {
             ['volontario', $v->id],
             ['comitato', $c->id]
             ]);
-        foreach ($ag as $_ag)
-        {
+        foreach ($ag as $_ag) {
             $_ag->cancella();
         }
 
@@ -177,38 +183,44 @@ class Trasferimento extends Entita {
             }
         }
 
+        /* Chiudo eventuale richiesta di tesserini o invalido l'attuale */
+        $motivo = "Trasferimento presso altro comitato";
+        $v->invalidaTesserino($motivo);
+
         /* Posso chiudere definitivamente la vecchia appartenenza */
 
-        $a->timestamp = time();
-        $a->fine = time();
+        $a = Appartenenza::id($a);
+        $a->timestamp = $ora;
+        $a->fine = $ora;
         $a->stato = MEMBRO_TRASFERITO;
 
         /* A questo punto rendo operativa la nuova appartenenza */
         
         $nuovaApp = $this->appartenenza();
-        $nuovaApp->timestamp = time();
+        $nuovaApp->timestamp = $ora;
         $nuovaApp->stato     = MEMBRO_VOLONTARIO;
         if (!$auto) 
         {
             $nuovaApp->conferma = $sessione->utente()->id;
         }
-        $nuovaApp->inizio = time();
+        $nuovaApp->inizio = $ora;
         $nuovaApp->fine = PROSSIMA_SCADENZA;
 
         $destinatari = [$v, $presidente, $nuovaApp->comitato()->unPresidente()];
         $m = new Email('richiestaTrasferimentook', 'Approvata richiesta trasferimento verso: ' . $nuovaApp->comitato()->nome);
-        if (!$auto)
-        {
+        
+        if (!$auto) {
             $m->da = $sessione->utente();
-        }            
+        }  
+
         $m->a = $destinatari;
         $m->_NOME       = $nuovaApp->volontario()->nomeCompleto();
         $m->_COMITATO   = $nuovaApp->comitato()->nomeCompleto();
         $m->_TIME = $this->dataRichiesta()->format('d/m/Y');
         $m->accoda();
 
-      
     }
+
 
     public static function daAutorizzare() {
         $t = Trasferimento::filtra([
@@ -236,7 +248,7 @@ class Trasferimento extends Entita {
         $v = $this->volontario();
 
         $destinatari = [$v, $this->comitato()->unPresidente(), $v->unComitato()->unPresidente()];
-        $m = new Email('richiestaTrasferimentoAnnullamento', 'Annullata richiesta estensione');          
+        $m = new Email('richiestaTrasferimentoAnnullamento', 'Annullata richiesta trasferimento');          
         $m->a = $destinatari;
         $m->_NOME = $v->nomeCompleto();
         $m->_COMITATO = $this->comitato()->nomeCompleto();

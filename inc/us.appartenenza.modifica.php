@@ -43,9 +43,26 @@ $v = $app->volontario;
                     <label for="dataFine"><i class="icon-time"></i> Scadenza</label>
                 </div>
                 <div class="span8">
-                    <input id="dataFine" class="span12" name="dataFine" type="text"  value="<?php if ($app->fine == 0) echo('Indeterminato'); else echo(date('d/m/Y', $app->fine)); ?>" readonly />
+                    <input id="dataFine" class="span12" name="dataFine" type="text"  value="<?= !$app->fine ? "Indeterminato" : date('d/m/Y', $app->fine); ?>" <?php if(!$me->admin()){ ?> readonly <?php } ?> />
                 </div>
             </div>
+            <?php if($me->admin()){ ?>
+            <div class="row-fluid">
+                <div class="span4 centrato">
+                    <label for="inputStato"><i class="icon-fire-extinguisher"></i> Stato</label>
+                </div>
+                <div class="control-group span8">
+                    <div class="controls">
+                        <select name="stato" class="span12">
+                            <?php
+                            foreach ($conf['membro'] as $const => $fName) {?>
+                                <option value='<?= $const; ?>' <?php if($app->stato == $const){echo ("selected='selected'");} ?> > <?= $fName; ?></option>
+                            <?php } ?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <?php } ?>
             <div class="row-fluid">
                 <div class="span4 centrato">
                     <label for="inputComitato"><i class="icon-home"></i> Comitato</label>

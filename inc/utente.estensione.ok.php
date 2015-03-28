@@ -7,13 +7,13 @@
 paginaPrivata();
 richiediComitato();
 
-$parametri = array();
-controllaParametri(['inputComitato', 'inputMotivo'], $parametri);
+controllaParametri(['inputComitato', 'inputMotivo'], 'utente.estensione&motivo');
 
 $c = $_POST['inputComitato'];
 if ( !$c ) { 
     redirect('utente.estensione');
 }
+
 $m = $_POST['inputMotivo'];
 
 /* Cerco appartenenze al comitato specificato */

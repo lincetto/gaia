@@ -15,8 +15,15 @@ paginaPrivata();
 $_daGestire = [
     APP_CO          =>  [EST_UNITA, EST_LOCALE, EST_PROVINCIALE, EST_REGIONALE, EST_NAZIONALE],
     APP_SOCI        =>  [EST_UNITA, EST_LOCALE, EST_PROVINCIALE, EST_REGIONALE, EST_NAZIONALE],
-    //APP_FORMAZIONE  =>  [EST_LOCALE, EST_PROVINCIALE, EST_REGIONALE, EST_NAZIONALE]
+    APP_FORMAZIONE  =>  [EST_LOCALE, EST_PROVINCIALE, EST_REGIONALE, EST_NAZIONALE],
+    APP_AUTOPARCO   =>  [EST_UNITA, EST_LOCALE, EST_PROVINCIALE, EST_REGIONALE, EST_NAZIONALE]
 ];
+
+// Quali deleghe possono essere assengate a Dipendenti
+$_dipendenti_app = [APP_SOCI];
+
+// Per quali livelli di comitati
+$_dipendenti_livelli = [EST_REGIONALE];
 
 $c = $_GET['oid'];
 $c = GeoPolitica::daOid($c);
@@ -70,6 +77,14 @@ $(document).ready(function() {
 
 
 <div class="">
+
+    <?php if ( isset($_GET['indirizzoBase']) ) { ?>
+    <div class="alert alert-error">
+        <i class="icon-warning-sign"></i> <strong>Indirizzo Mancante</strong> &mdash;
+        Per poter attivare un corso base su questa struttura è necessario che venga 
+        inserito un indirizzo valido.
+    </div>
+    <?php } ?>
 
     <?php if ( isset($_GET['ok']) ) { ?>
     <div class="alert alert-success">
@@ -154,7 +169,13 @@ $(document).ready(function() {
             </li>
             <?php } */?>
 
-            
+            <li>
+                <a data-toggle="tab" href="#corsibase">
+                    <i class='icon-leaf'></i>
+                    Corsi Base
+                </a>
+            </li>
+
             <?php
                 foreach ( $_daGestire as $_gestione => $_estensioni ) {
 
@@ -516,13 +537,16 @@ $(document).ready(function() {
             </div>
             
             <!-- Tab: Corsi base -->
-            <?php /*
             <div class="tab-pane"           id="corsibase">
                 <h4>Corsi base</h4>
                 <p>Per questo comitato, sono stati organizzati e pubblicati un totale di <strong><?php echo count($c->corsiBase(true)); ?> corsi base</strong>.</p>
-                <p>Per gestire i corsi base, vai alla pagina di <a href="?p=formazione.corsibase">Gestione dei corsi base</a>.</p>
+                <p>Per gestire i corsi base esistenti ed attivarne di nuovi, vai alla pagina di <a href="?p=formazione.corsibase">Gestione dei corsi base</a>.</p>
+                <hr />
+                <h4><i class="icon-warning-sign"></i> Domanda formativa dell'area</h4>
+                <p>Nella zona del Comitato, <strong>sono presenti <big><?= Aspirante::numChePassanoPer($c); ?> aspiranti</big> interessati ad entrare in Croce Rossa</strong>.</p>
+                <p>In caso di attivazione di un Corso Base su Gaia, questi volontari verranno automaticamente informati dal sistema,
+                   ed invitati periodicamente a considerare le varie opzioni formative attive sul territorio circostante.</p>
             </div>
-            */ ?>
             
             <?php            
             $i = 0;
@@ -534,6 +558,11 @@ $(document).ready(function() {
 
                 $_nome = $conf['applicazioni'][$_gestione];
                 $delegati = $c->delegati($_gestione, true);
+
+                // Abilitare la gestione dipendenti per questa app a questo livello?
+                $dipendenti =  in_array($_gestione, $_dipendenti_app) 
+                            && in_array($c->_estensione(), $_dipendenti_livelli);
+
                 ?>
                 <!-- Tab: App <?php echo $_nome; ?> -->
                 <div class="tab-pane"   id="app_<?php echo $_gestione; ?>">
@@ -544,6 +573,21 @@ $(document).ready(function() {
                         di <strong><?= $_nome; ?></strong> per il <strong><?= $c->nomeCompleto(); ?></strong>.
                     </div>
 
+                    <?php
+                    if($_gestione == APP_SOCI){
+                        if($c->permettiTrasferimentiUS()){
+                            ?>
+                            <a class="btn btn-success btn-block" href="?p=presidente.comitato.trasferimentiUS&oid=<?= $c->oid(); ?>">I Delegati ufficio soci possono approvare e negare le richieste di trasferimento. Clicca qui per cambiare.</a>
+                            <?php
+                        }else{
+                            ?>
+                            <a class="btn btn-danger btn-block" href="?p=presidente.comitato.trasferimentiUS&oid=<?= $c->oid(); ?>">I Delegati ufficio soci non possono approvare e negare le richieste di trasferimento. Clicca qui per cambiare.</a>
+                            <?php
+                        }
+                    }
+                        
+
+                    ?>
                         
                     <h4>Volontari con accesso alle funzioni di <?php echo $_nome; ?></h4>
                     
@@ -562,11 +606,23 @@ $(document).ready(function() {
                         <?php if ($modifica) { ?>
                         <tr>
                             <td colspan="4">
-                                <a data-autosubmit="true" data-selettore="true" data-input="persona" class="btn btn-block btn-primary">
-                                    <i class="icon-plus"></i>
-                                    Aggiungi un volontario che potrà accedere alle funzioni di <?php echo $_nome; ?>
-                                </a>
+                                <div class="btn-group btn-block row-fluid">
+                                    <a data-autosubmit="true" data-selettore="true" data-input="persona" 
+                                       class="btn btn-primary span<?= $dipendenti ? 8 : 12; ?>">
+                                        <i class="icon-plus"></i>
+                                        Aggiungi un Volontario che potrà accedere alle funzioni di <?php echo $_nome; ?>
+                                    </a>   
+                                    <?php if ( $dipendenti ) { ?>
+                                    <a href="?p=presidente.comitato.dipendenti.delega&oid=<?= $c->oid(); ?>&applicazione=<?= $_gestione; ?>"
+                                        class="btn btn-info span4">
+                                        <i class="icon-plus"></i>
+                                        Aggiungi un Dipendente
+                                        </a>
+                                    <?php } ?>
+                                </div>
                             </td>
+
+
                         </tr>
                         
                         <?php } 
@@ -617,8 +673,7 @@ $(document).ready(function() {
                                     ha accesso alle funzioni di <?php echo $_nome; ?>.
                                 </td>
                             </tr>
-                        <?php } ?>
-                            
+                        <?php } ?>                       
                             
                         
                     </table>

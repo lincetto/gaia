@@ -29,10 +29,15 @@ paginaAdmin();
     Attenzione il Comitato che si vuole cancellare ha dei comitati sottostanti, rimuoverli e riprovare.
 </div>
 <?php }elseif ( isset($_GET['evol']) ) { ?>
-<div class="alert alert-error">
-    <i class="icon-warning-sign"></i> <strong>Volontari correlati</strong>.
-    Attenzione il Comitato che si vuole cancellare ha dei Volontari iscritti, rimuoverli e riprovare.
-</div>
+    <div class="alert alert-error">
+        <i class="icon-warning-sign"></i> <strong>Volontari correlati</strong>.
+        Attenzione il Comitato che si vuole cancellare ha dei Volontari appartenenti ad esso, rimuoverli e riprovare.
+    </div>
+<?php }elseif ( isset($_GET['quota']) ) { ?>
+    <div class="alert alert-error">
+        <i class="icon-warning-sign"></i> <strong>Quote correlate</strong>.
+        Attenzione il Comitato che si vuole cancellare ha delle quote correlate, rimuoverle e riprovare.
+    </div>
 <?php } elseif ( isset($_GET['spostato']) ) { ?>
         <div class="alert alert-success">
             <i class="icon-save"></i> <strong>Comitato spostato con successo</strong>.
@@ -45,7 +50,7 @@ paginaAdmin();
     <p>L'operazione che stavi tentando di eseguire non è andata a buon fine. Per favore riprova.</p>
 </div> 
 <?php } ?>
-<script type="text/javascript"><?php require './js/presidente.utenti.js'; ?></script>
+<script type="text/javascript"><?php require './assets/js/presidente.utenti.js'; ?></script>
 <br/>
 
 <div class="row-fluid">

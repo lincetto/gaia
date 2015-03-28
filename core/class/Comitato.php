@@ -10,6 +10,8 @@ class Comitato extends GeoPolitica {
         $_t  = 'comitati',
         $_dt = 'datiComitati';
 
+    use EntitaCache;
+
     public static 
         $_ESTENSIONE = EST_UNITA;
 
@@ -19,7 +21,7 @@ class Comitato extends GeoPolitica {
      */ 
     public function __get ($_nome) {
         $nonSovrascrivere = ['id', 'nome', 'principale', 'locale'];
-        if ( parent::__get('principale') && !in_array($_nome, $nonSovrascrivere) ) {
+        if ( parent::__get('principale') && !contiene($_nome, $nonSovrascrivere) ) {
             return $this->locale()->{$_nome};
         }
         return parent::__get($_nome);
@@ -45,6 +47,8 @@ class Comitato extends GeoPolitica {
     public function unPresidente() {
         return $this->locale()->unPresidente();
     }
+
+    
 
     private function generaColore() { 
     	$r = 100 + rand(0, 155);
@@ -157,7 +161,7 @@ class Comitato extends GeoPolitica {
         return $r;
     }
     
-    /*
+    /**
      * Membri in estensione
      * @return estensioni dal comitato $this
      */
@@ -594,95 +598,93 @@ class Comitato extends GeoPolitica {
         return [$this];
     }
     
-    public function quoteSi($anno , $stato=MEMBRO_VOLONTARIO) {
-        $statiPossibili = [MEMBRO_VOLONTARIO, MEMBRO_DIMESSO, MEMBRO_TRASFERITO]; 
-        if($stato == MEMBRO_ORDINARIO) {
-            $statiPossibili = [MEMBRO_ORDINARIO, MEMBRO_ORDINARIO_DIMESSO];
+    /**
+     * Ottiene elenco dei potenziali soci del comitato in un dato anno, al solo uso di
+     * successiva verifica del pagamento della quota o meno nell'anno - NESSUN altro uso!
+     * @param int $anno     Opzionale. Anno di riferimento. Default anno attuale.
+     * @
+     * @return array(Utente)
+     */
+    public function potenzialiSoci($anno = false, $stato = MEMBRO_VOLONTARIO) {
+        global $conf;
+        $anno       = $anno ? (int) $anno : (int) date('Y');
+        $minimo     = (DT::createFromFormat('d/m/Y H:i', "1/1/{$anno} 00:00"));
+        $minimo     = $minimo->getTimestamp();
+        $massimo    = (DT::createFromFormat('d/m/Y H:i', "31/12/{$anno} 23:59")); 
+        $massimo    = $massimo->getTimestamp();
+
+        if ( !is_array($stato) ) {
+            if ( array_key_exists($stato, $conf['appartenenze_posteri']) ) 
+                $stato = $conf['appartenenze_posteri'][$stato];
+            else
+                $stato = [$stato];
         }
-        $stati = implode(',', $statiPossibili);
-        $q = $this->db->prepare("
-            SELECT  
-                anagrafica.id
-            FROM    
-                appartenenza, anagrafica
-            WHERE
-                appartenenza.comitato = :comitato
-            AND
-                anagrafica.id = appartenenza.volontario
-            AND
-                appartenenza.stato IN ( ". $stati ." )
-            AND
-                ( anagrafica.id IN 
-                    ( SELECT
-                            appartenenza.volontario
-                        FROM
-                            quote, appartenenza
-                        WHERE
-                            quote.appartenenza = appartenenza.id
-                        AND
-                            quote.anno = :anno
-                        AND 
-                            quote.pAnnullata IS NULL
-                    )
-                )
-            ORDER BY
-              anagrafica.cognome     ASC,
-              anagrafica.nome  ASC");
-        $q->bindParam(':comitato',  $this->id);
-        $q->bindValue(':anno',    $anno);
+
+        foreach ( $stato as &$s )
+            $s = (int) $s;
+
+        $stato = implode(', ', $stato);
+        
+        $query = "
+            SELECT  anagrafica.id
+            FROM    appartenenza, anagrafica
+            WHERE   appartenenza.comitato = :comitato
+            AND     anagrafica.id = appartenenza.volontario 
+            AND     appartenenza.stato IN ({$stato})
+            AND     appartenenza.inizio <= :massimo
+            AND (
+                        appartenenza.fine IS NULL
+                    OR  appartenenza.fine = 0
+                    OR  appartenenza.fine > :minimo
+            )
+        ";
+        $q = $this->db->prepare($query);
+
+        $q->bindParam(':comitato', $this->id, PDO::PARAM_INT);
+        $q->bindParam(':minimo',   $minimo, PDO::PARAM_INT);
+        $q->bindParam(':massimo',  $massimo, PDO::PARAM_INT);
         $q->execute();
         $r = [];
         while ( $k = $q->fetch(PDO::FETCH_NUM) ) {
-            $r[] = Volontario::id($k[0]);
+            $r[] = Utente::id($k[0]);
+        }
+        return $r;
+    }
+
+    /**
+     * Ritorna tutti i Soci Attivi (coloro che han pagato la Quota Associativa)
+     * che son stati appartenenti in un dato anno a questo comitato 
+     * @param int $anno     Opzionale. Anno di riferimento. Default anno attuale.
+     * @return array(Utente)
+     */
+    public function quoteSi($anno = false, $stato = MEMBRO_VOLONTARIO) {
+        $r = [];
+        $soci = $this->potenzialiSoci($anno, $stato);
+        foreach ( $soci as $p ) {
+            if ( $p->socioAttivo($anno) )
+                $r[] = $p;
         }
         return $r;
     }
     
-     public function quoteNo($anno , $stato=MEMBRO_VOLONTARIO) {
-        $q = $this->db->prepare("
-            SELECT 
-                anagrafica.id 
-            FROM    
-                anagrafica, appartenenza 
-            WHERE         
-                anagrafica.id = appartenenza.volontario 
-            AND
-                appartenenza.comitato = :comitato
-            AND
-                appartenenza.stato = :stato
-            AND 
-                ( appartenenza.fine < 1 OR appartenenza.fine > :ora OR appartenenza.fine IS NULL)
-            AND 
-                ( anagrafica.id NOT IN 
-                    ( SELECT 
-                            appartenenza.volontario 
-                        FROM 
-                            quote, appartenenza
-                        WHERE
-                            quote.appartenenza = appartenenza.id 
-                        AND
-                            anno = :anno
-                        AND
-                            pAnnullata IS NULL
-                    )
-                ) 
-                
-            ORDER BY
-                anagrafica.cognome     ASC,
-                anagrafica.nome  ASC");
-        $q->bindParam(':comitato',  $this->id);
-        $q->bindParam(':ora',  time());
-        $q->bindParam(':anno', $anno);
-        $q->bindParam(':stato', $stato);
-        $q->execute();
+    /**
+     * Ritorna tutti i Soci NON Attivi (coloro che, pur passibili, non hanno pagato la Quota Associativa)
+     * che son stati appartenenti in un dato anno a questo comitato 
+     * @param int $anno     Opzionale. Anno di riferimento. Default anno attuale.
+     * @return array(Utente)
+     */
+    public function quoteNo($anno = false, $stato = MEMBRO_VOLONTARIO) {
         $r = [];
-        while ( $k = $q->fetch(PDO::FETCH_NUM) ) {
-            $r[] = Volontario::id($k[0]);
+        foreach ( $this->potenzialiSoci($anno, $stato) as $p ) {
+            if ( $p->socioNonAttivo($anno) )
+                $r[] = $p;
         }
         return $r;
+
     }
     
-    /*
+    /**
+     * Restituisce elenco volontari in possesso di un dato titolo
      * @param $titoli Array di elementi Titolo
      */
     public function ricercaMembriTitoli( $titoli = [], $stato = MEMBRO_ESTESO ) {
@@ -858,32 +860,14 @@ class Comitato extends GeoPolitica {
     }
      
     public function coTurni() {
-        global $db;
-        $q = $db->prepare("
-            SELECT
-                turni.id
-            FROM
-                attivita, turni
-            WHERE
-                attivita.comitato = :comitato
-            AND
-                attivita.stato = :stato
-            AND
-                turni.attivita = attivita.id
-            AND
-                turni.inizio <= :inizio
-            ORDER BY
-                turni.inizio ASC");
+        $attivita = Attivita::filtra([['comitato', $this->oid()],['stato', ATT_STATO_OK]]);
+        $turni = [];
         $inizio = time()+3600;
-        $q->bindValue(':inizio', $inizio);
-        $q->bindValue(':stato', ATT_STATO_OK);
-        $q->bindParam(':comitato', $this->oid());
-        $q->execute();
-        $r = [];
-        while ( $k = $q->fetch(PDO::FETCH_NUM) ) {
-            $r[] = Turno::id($k[0]);
+        foreach ( $attivita as $att ){
+            $turni = array_merge($turni, Turno::filtra([['attivita', $att],['inizio',$inizio,OP_LTE]]));
         }
-            return $r;
+        $turni = array_unique($turni);
+        return $turni;
     }
 
     /**
@@ -937,4 +921,215 @@ class Comitato extends GeoPolitica {
         }
         return $r;
     }
+
+    /**
+     * Se l'unità è principale utilizza i dati del livello superiore
+     * altrimenti usa la funzione standard
+     */
+    public function haPosizione() {
+        if ($this->principale) {
+            return $this->superiore()->haPosizione();
+        }
+        return parent::haPosizione();
+    }
+
+    /**
+     * Se l'unità è principale utilizza i dati del livello superiore
+     * altrimenti usa la funzione standard
+     */
+    public function linkMappa() {
+        if ($this->principale) {
+            return $this->superiore()->linkMappa();
+        }
+        return parent::linkMappa();
+    }
+
+    /**
+     * Se l'unità è principale utilizza i dati del livello superiore
+     * altrimenti usa la funzione standard
+     */
+    public function coordinate() {
+        if ($this->principale) {
+            return $this->superiore()->coordinate();
+        }
+        return parent::coordinate();
+    }
+    
+    /**
+     * Se l'unità è principale utilizza i dati del livello superiore
+     * altrimenti usa la funzione standard
+     */
+    public function latlng() {
+        if ($this->principale) {
+            return $this->superiore()->latlng();
+        }
+        return parent::latlng();
+    }
+    
+    /**
+     * Se l'unità è principale utilizza i dati del livello superiore
+     * altrimenti usa la funzione standard
+     */
+    public function localizzaCoordinate($x, $y) {
+        if ($this->principale) {
+            return $this->superiore()->localizzaCoordinate($x, $y);
+        }
+        return parent::localizzaCoordinate($x, $y);
+    }
+    
+    /**
+     * Se l'unità è principale utilizza i dati del livello superiore
+     * altrimenti usa la funzione standard
+     */
+    public function localizzaStringa($stringa) {
+        if ($this->principale) {
+            return $this->superiore()->localizzaStringa($stringa);
+        }
+        return parent::localizzaStringa($stringa);
+    }
+
+    /**
+     * Fototessere in attesa
+     * @param comitato
+     * @return Utente array
+     */
+    public function fototesserePendenti() {
+        $filtrato = [];
+        foreach( $this->membriAttuali(MEMBRO_VOLONTARIO) as $u ) {
+            if ( !$u->fototessera() ) { continue; }
+            if ( $u->fototessera()->approvata() ) { continue; }
+            $filtrato[] = $u;
+        }
+        return $filtrato;
+    }
+
+    /**
+     * Tesserini in attesa di essere riconsegnati
+     * @param comitato
+     * @return Utente array
+     */
+    public function tesseriniNonRiconsegnati() {
+        $filtrato = [];
+        foreach( $this->membriDimessi() as $u ) {
+            $t = TesserinoRichiesta::filtra([
+                ['volontario',      $u],
+                ['stato',           INVALIDATO]],
+                'tConferma DESC'
+            );
+            $t = $t[0];
+            if ( !$t || $t->pRiconsegnato ) { continue; }
+            $filtrato[] = $u;
+        }
+        return $filtrato;
+    }
+
+    /**
+     * Cancella il comitato con tutte le sue dipendenze
+     * @param comitato
+     */
+    public function cancella(){
+
+        /* Cancello aree e responsabili */
+        $aree = Area::filtra([
+          ['comitato', $this]
+        ]);
+        foreach($aree as $area){
+            $area->cancella();
+        }
+
+        /* Cancello le attività */
+        $attivita = Attivita::filtra([
+          ['comitato', $this]
+        ]);
+        foreach($attivita as $att){
+            $turni = Turno::filtra([['attivita', $att]]);
+            foreach ( $turni as $turno ){
+                $partecipazioni = Partecipazione::filtra([['turno', $turno]]);
+                foreach( $partecipazioni as $partecipazione ){
+                    $autorizzazioni = Autorizzazione::filtra([['partecipazione', $partecipazione]]);
+                    foreach( $autorizzazioni as $autorizzazione ){
+                        $autorizzazione->cancella();
+                    }
+                    $partecipazione->cancella();
+                }
+                $coturni = Coturno::filtra([['turno', $turno]]);
+                foreach( $coturni as $coturno ){
+                    $coturno->cancella();
+                }
+                $turno->cancella();
+            }
+            $mipiaci = Like::filtra([['oggetto', $att->oid()]]);
+            foreach( $mipiaci as $mipiace ){
+                $mipiace->cancella();
+            }
+            $att->cancella();
+        }
+
+        /* Cancello le dimissioni */
+        $dimissioni = Dimissione::filtra([
+            ['comitato', $this]
+        ]);
+        foreach( $dimissioni as $dimissione ){
+            try{
+                $appartenenza = $dimissione->appartenenza();
+                $appartenenza->cancella();
+            }catch(Exception $e){
+
+            }
+            $dimissione->cancella();
+        }
+
+        /* Cancello le dimissioni */
+        $estensioni = Estensione::filtra([
+            ['cProvenienza', $this]
+        ]);
+        foreach( $estensioni as $estensione ){
+            try{
+                $appartenenza = $estensione->appartenenza();
+                $appartenenza->cancella();
+            }catch(Exception $e){
+
+            }
+            $estensione->cancella();
+        }
+
+        /* Cancello i gruppi personali */
+        $appgruppi = AppartenenzaGruppo::filtra([
+            ['comitato', $this]
+        ]);
+        foreach( $appgruppi as $appgruppo ){
+            $appgruppo->cancella();
+        }
+
+        /* Cancello reperibilità */
+        $reperibilita = Reperibilita::filtra([
+          ['comitato', $t]
+        ]);
+        foreach($reperibilita as $reperibile){
+            $reperibile->cancella();
+        }
+
+        /* Cancello appartenenze */
+        $appartenenze = Appartenenza::filtra([['comitato', $this]]);
+        foreach ( $appartenenze as $appa ){
+            $riserve = Riserva::filtra([['appartenenza', $appa]]);
+            foreach( $riserve as $riserva ){
+                $riserva->cancella();
+            }
+
+            $estensioni = Estensione::filtra([['appartenenza', $appa]]);
+            foreach( $estensioni as $estensione ){
+                $estensione->cancella();
+            }
+
+            $trasferimenti = Trasferimento::filtra([['appartenenza', $appa]]);
+            foreach( $trasferimenti as $trasferimento ){
+                $trasferimento->cancella();
+            }
+            $appa->cancella();
+        }
+        
+        parent::cancella();
+    }
+
 }

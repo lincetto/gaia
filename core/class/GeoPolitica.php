@@ -51,7 +51,7 @@ abstract class GeoPolitica extends GeoEntita {
      * @param bool $storico Opzionale. Ritornare anche i passati? Default true.
      * @return array(CorsoBase) Lista di corsi base organizzati
      */
-    public function corsiBase ( $storico = true ) {
+    public function corsiBase ( $storico = true, $inCorso = false ) {
         $c = CorsoBase::filtra([
             ['organizzatore',  $this->oid()]
         ]);
@@ -60,14 +60,22 @@ abstract class GeoPolitica extends GeoEntita {
             return $c; 
 
         $r = [];
-        foreach ( $c as $_c ) {
-            if ( $_c->futuro() )
-                $r[] = $_c;
+        foreach ($c as $_c) {
+            if ( !$_c->concluso() )
+                $r[] = $_c; 
         }
-        return $r;
+        if ( $inCorso ) 
+            return $r;
+
+        $rr = [];
+        foreach ( $r as $_r ) {
+            if ( $_r->futuro() )
+                $rr[] = $_r;
+        }
+        return $rr;
     }
     
-    /*
+    /**
      * Ottiene il livello di estensione (costante EST_UNITA, EST_LOCALE, ecc)
      */
     public function _estensione() {
@@ -76,6 +84,10 @@ abstract class GeoPolitica extends GeoEntita {
 
     public function presidenti() {
         return $this->delegati(APP_PRESIDENTE);
+    }
+
+    public function permettiTrasferimentiUS() {
+        return (bool) $this->trasferimentiUS;
     }
     
     public function volontariPresidenti() {
@@ -136,16 +148,14 @@ abstract class GeoPolitica extends GeoEntita {
     
     /*
      * Ritorna se questa entità sovrasta/contiene un'altra GeoPolitica
-     * a un livello qualsiasi di profondità, esplorando ricorsivamente
+     * a un livello qualsiasi di profondità, risalendo l'albero
      */
     public function contiene( GeoPolitica $comitato ) {
         if ( $this->oid() == $comitato->oid() ) { return true; } // contengo me stesso
-        foreach ( $this->figli() as $figlio ) {
-            if ( 
-                    $comitato->oid() == $figlio->oid()
-                    or
-                    $figlio->contiene($comitato)
-                    ) {
+        $attuale = $comitato;
+        while ( ! $attuale instanceOf Nazionale ) {
+            $attuale = $attuale->superiore();
+            if ( $attuale->oid() == $this->oid() ) {
                 return true;
             }
         }
@@ -167,6 +177,40 @@ abstract class GeoPolitica extends GeoEntita {
                 return true;
             }
         }
+        return false;
+
+    }
+
+    /**
+     * Calcola il dominio comune tra la GeoPolitica attuale ed una seconda fornita
+     * - Se le due GeoPolitiche risiedono su di un ramo comune, ritorna la GeoPolitica inferiore
+     * - Se le due GeoPolitiche risiedono su rami differenti, ritorna FALSE
+     * @param GeoPolitica $g                La seconda GeoPolitica
+     * @return false|GeoPolitica      Il dominio comune
+     */
+    public function dominioComune( GeoPolitica $g ) {
+
+        if ( static::$_ESTENSIONE == $g::$_ESTENSIONE ) {
+            // Le due sono dello stesso livello.
+            if ( $this->oid() == $g->oid() ) { return $this; }
+            return false;
+
+        } elseif ( static::$_ESTENSIONE > $g::$_ESTENSIONE ) {
+            // Questa e' superiore
+            $maggiore = $this;
+            $minore   = $g;
+
+        } else {
+            // Questa e' inferiore
+            $maggiore = $g;
+            $minore   = $this;
+
+        }
+
+        if ( $maggiore->contiene($minore) ) {
+            return $minore;
+        }
+
         return false;
 
     }
@@ -282,9 +326,10 @@ abstract class GeoPolitica extends GeoEntita {
                 )");
     }
 
-    public function attivita() {
+    public function attivita($apertura = ATT_APERTA) {
         return Attivita::filtra([
-            ['comitato', $this->oid()]
+            ['comitato', $this->oid()],
+            ['apertura', $apertura]
         ],'nome ASC');
     }
 
@@ -345,6 +390,32 @@ abstract class GeoPolitica extends GeoEntita {
             ['comitato',    $this->oid()]
         ], 'nome ASC');
         return $g;
+    }
+
+    /**
+     * Cancella Geopolitica
+     * @param GeoPolitica
+     */
+    public function cancella(){
+
+        $oid = $this->oid();
+
+        /* Cancello autoparchi e veicoli ad esso associati li passo al nazionale */
+        Autoparco::cancellaTutti([['comitato', $oid]]);
+
+        /* Cancello i corsi base */
+        CorsoBase::cancellaTutti([['comitato', $oid]]);
+        
+        /* Cancello i delegati */
+        Delegato::cancellaTutti([['comitato', $oid]]);
+
+        /* Cancello i gruppi */
+        Gruppo::cancellaTutti([['comitato', $oid]]);
+
+        /* Assegno veicoli a nazionale */
+        Veicolo::cancellaTutti([['comitato', $oid]]);
+
+        parent::cancella();
     }
     
 }

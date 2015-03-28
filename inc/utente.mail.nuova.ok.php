@@ -28,7 +28,7 @@ if (isset($_GET['unit'])) {
     $elenco = $me->comitatiApp ([ APP_SOCI, APP_PRESIDENTE ]);
     $v = [];
     foreach($elenco as $comitato) {
-        $v = array_merge($v, $comitato->membriAttuali(MEMBRO_VOLONTARIO));
+        $v = array_merge($v, $comitato->membriAttuali());
     }
     if(!$v) { redirect('utente.me&nodest'); }
     $m = new Email('mailTestolibero', $oggetto);
@@ -292,6 +292,19 @@ if (isset($_GET['unit'])) {
     $m->_TESTO = $testo;
     $m->accoda();
 
+} elseif(isset($_GET['estensione'])) {
+    $g = $_GET['id'];
+    $comitato = Comitato::id($g);
+    $estensione = $comitato->membriInEstensione();
+    foreach ( $estensione as $esteso ){   
+        $v = $esteso->volontario();
+        $m = new Email('mailTestolibero', ''.$oggetto);
+        $m->da = $me; 
+        $m->a = $v;
+        $m->_TESTO = $testo;
+        $m->accoda();
+    }
+
 }elseif (isset($_GET['riserva'])) {
     $g = $_GET['id'];
     $comitato = Comitato::id($g);
@@ -384,12 +397,17 @@ if (isset($_GET['unit'])) {
         $v = array_merge($v, $comitato->membriOrdinari());
     }
     if(!$v) { redirect('utente.me&nodest'); }
-    $m = new Email('mailTestolibero', ''.$oggetto);
-    $m->da = $me; 
-    $m->a = $volontari;
-    $m->_TESTO = $testo;
-    $m->accoda();
-
+    foreach ($v as $_v){
+        try {
+              $m = new Email('mailTestolibero', ''.$oggetto);
+              $m->da = $me; 
+              $m->a = $_v; 
+              $m->_TESTO = $testo;
+              $m->accoda();
+            } catch ( Errore $e ) {
+              // Questo volontario non ha email, non faccio niente...
+            }
+    }
 } elseif(isset($_GET['ordinariunit'])) {
     $c = $_GET['id'];
     $c = Comitato::id($c);
@@ -434,4 +452,3 @@ if (isset($_GET['unit'])) {
 }  
 
 redirect('utente.me&ok');
-?>

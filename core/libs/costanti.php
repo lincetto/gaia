@@ -15,8 +15,8 @@ define('DONNA', 0);
 
 /* Definizioni in stringa */
 $conf['sesso'] = [
-    UOMO     =>  'Uomo',
-    DONNA       =>  'Donna'
+    UOMO     =>  'Maschio',
+    DONNA    =>  'Femmina'
 ];
 
 /* Tipologie/stati delle persone */
@@ -40,6 +40,26 @@ define('GIORNO',        86400);
 define('DUEGIORNI',    172800);
 define('ETAMINIMA', 441504000);
 
+
+/*
+ * ===================================
+ * ============ ENTITA ===============
+ * ===================================
+ */
+define('OP_EQ',     '='); 
+define('OP_LIKE',   'LIKE');
+define('OP_NLIKE',  'NOT LIKE');
+define('OP_LT',     '<');
+define('OP_LTE',    '<=');
+define('OP_GT',     '>');
+define('OP_GTE',    '>=');
+define('OP_NE',     '<>');
+define('OP_NULL',   'IS NULL');
+define('OP_NNULL',  'IS NOT NULL');
+define('OP_SQL',    'YOU_SHOULD_NOT_SEE_ME_IN_A_QUERY');
+
+// Definisce gli operatori unari (senza complemento oggetto)
+$conf['op_unari'] = [OP_SQL, OP_NULL, OP_NNULL];
 
 /*
  * ===================================
@@ -69,7 +89,21 @@ define('MEMBRO_MODERATORE',        50);
 define('MEMBRO_DIPENDENTE',        60);
 define('MEMBRO_PRESIDENTE',        70);
 
+/**
+ * Quando guardo a posteri un'appartenenza, e cerco un *CHIAVE*,
+ * in realta' devo guardare per uno in *VALORI*
+ */
+$conf['appartenenze_posteri'] = [
+    MEMBRO_VOLONTARIO => [
+        MEMBRO_VOLONTARIO,
+        MEMBRO_DIMESSO,
+        MEMBRO_TRASFERITO,
+    ],
 
+    MEMBRO_ORDINARIO => [
+        MEMBRO_ORDINARIO
+    ]
+];
 
 /* Definizioni in stringa */
 $conf['membro'] = [
@@ -94,6 +128,30 @@ $conf['membro'] = [
     MEMBRO_APP_NEGATA           =>  'Appartenenza negata'
 ];
 
+/* Le tipologie di appartenenza che non sono valide (non vere appartenenze) */
+$conf['membro_invalido'] = [
+    MEMBRO_TRASF_NEGATO,
+    MEMBRO_TRASF_ANN,
+    MEMBRO_TRASF_IN_CORSO,
+    MEMBRO_PENDENTE,
+    MEMBRO_EST_PENDENTE,
+    MEMBRO_APP_NEGATA,
+    MEMBRO_EST_ANN
+
+];
+
+/* Appartenenze, oltre a membro_invalido, non valide ai fini della quota associativa */
+$conf['membro_nonquota'] = [
+    MEMBRO_ESTESO,
+    MEMBRO_EST_TERMINATA,
+];
+
+/* Le tipologie di appartenenza che rappresentano dimissione da CRI */
+$conf['membro_dimesso'] = [
+    MEMBRO_ORDINARIO_DIMESSO,
+    MEMBRO_DIMESSO
+];
+
 
 /*
  * ===================================
@@ -104,6 +162,20 @@ $conf['membro'] = [
 /* Privacy servizi */
 define('ATTIVITA_PRIVATA',		0);
 define('ATTIVITA_PUBBLICA',		1);
+
+/*
+ * ===================================
+ * ========STATO ATTIVITA ============
+ * ===================================
+ */
+
+define('ATT_CHIUSA',      0);
+define('ATT_APERTA',     10);
+
+$conf['attivita_stato'] = [
+    ATT_CHIUSA     =>  'Attività chiusa',
+    ATT_APERTA     =>  'Attività attiva'
+];
 
 /*
  * ===================================
@@ -132,11 +204,13 @@ $conf['autorizzazione'] = [
  */
 
 
+define('PART_RIT',           0);
 define('PART_PENDING',      10);
 define('PART_NO',           20);
 define('PART_OK',           30);
 
 $conf['partecipazione'] = [
+    PART_RIT            =>  'Ritirato',
     PART_PENDING        =>  'In attesa',
     PART_NO             =>  'Negata',
     PART_OK             =>  'Concessa'
@@ -177,6 +251,19 @@ $conf['avatar'] = [
     80  =>  [750,   750]
 ];
 
+/*
+ * ===================================
+ * =========== FOTOTESSERA ===========
+ * ===================================
+ */
+
+/* Avatar, dimensioni */
+$conf['fototessera'] = [
+    10  =>  [75,    75],
+    20  =>  [150,   150],
+    80  =>  [750,   750]
+];
+
 
 /*
  * ===================================
@@ -206,12 +293,20 @@ $conf['docs_tipologie'] = [
 
 /*
  * ===================================
- * ======== ESPLIRAZIONE =============
+ * ======== ESPLORAZIONE =============
  * ===================================
  */
 define('NON_ESPLORARE',         0);
 define('ESPLORA_RAMI',          1);
 define('ESPLORA_SOLO_FOGLIE',   2);
+
+/*
+ * ===================================
+ * ========= FOTOTESSERA =============
+ * ===================================
+ */
+define('FOTOTESSERA_PENDING',         0);
+define('FOTOTESSERA_OK',             10);
 
 /*
  * ===================================
@@ -230,11 +325,11 @@ define('TITOLO_CRI',            4);
 $conf['titoli'] = [
 	/*
 	num =>  [denominazione,		       verifica, data,  data_obbl] */
-	TITOLO_PERSONALE	=>	['Competenza personale',	false,	false,	false],
+	TITOLO_PERSONALE	    =>	['Competenza personale',	false,	false,	false],
 	TITOLO_PATENTE_CIVILE	=>	['Patente Civile',             	false,	true,	false],
-	TITOLO_PATENTE_CRI	=>	['Patente CRI',             	true,	true,	true],
-	TITOLO_STUDIO   	=>	['Titolo di studio',		false,  true,   false],
-	TITOLO_CRI       	=>	['Titolo di Croce Rossa',	true,	true,	false]
+	TITOLO_PATENTE_CRI	    =>	['Patente CRI',             	true,	true,	true],
+	TITOLO_STUDIO   	    =>	['Titolo di studio',		false,  true,   false],
+	TITOLO_CRI       	    =>	['Titolo di Croce Rossa',	true,	true,	false]
 ];
 
 
@@ -255,23 +350,23 @@ define('PROSSIMA_SCADENZA', 0);
  * ===================================
  */
 define('APP_ATTIVITA',      10);
-// define('APP_PROTOCOLLO',    20);
 define('APP_PRESIDENTE',    30);
 define('APP_OBIETTIVO',     40);
 define('APP_CO',            50);
 define('APP_SOCI',          60);
 define('APP_PATENTI',       70);
 define('APP_FORMAZIONE',    80);
+define('APP_AUTOPARCO',     90);
 
 $conf['applicazioni'] = [
     APP_ATTIVITA    =>  "Attività",
-    // APP_PROTOCOLLO  =>  "Protocollo",
+    APP_AUTOPARCO   =>  "Autoparco",
     APP_PRESIDENTE  =>  "Presidente",
     APP_OBIETTIVO   =>  "Obiettivo strategico",
     APP_CO          =>  "Centrale Operativa",
     APP_SOCI        =>  "Ufficio Soci",
-    APP_PATENTI     => "Ufficio Patenti",
-    APP_FORMAZIONE  => "Resp. Formazione"
+    APP_PATENTI     =>  "Ufficio Patenti",
+    APP_FORMAZIONE  =>  "Resp. Formazione"
 ];
 
 /*
@@ -407,6 +502,7 @@ $conf['riserve'] = [
  */
 define('DIM_VOLONTARIE', 10);
 define('DIM_TURNO',      20);
+define('DIM_RISERVA',    25);
 define('DIM_QUOTA',      30);
 define('DIM_RADIAZIONE', 40);
 define('DIM_DECEDUTO',   50);
@@ -414,6 +510,7 @@ define('DIM_DECEDUTO',   50);
 $conf['dimissioni'] = [
     DIM_VOLONTARIE  =>  'Dimissioni Volontarie',
     DIM_TURNO       =>  'Mancato svolgimento turno',
+    DIM_RISERVA     =>  'Mancato rientro da riserva',
     DIM_QUOTA       =>  'Mancato versamente quota annuale',
     DIM_RADIAZIONE  =>  'Radiazione da Croce Rossa Italiana',
     DIM_DECEDUTO    =>  'Decesso'
@@ -425,7 +522,7 @@ $conf['dimissioni'] = [
  * ===================================
  */
 
-define('GIOVANI', 1009821632);
+define('GIOVANI', 32);
 
 /*
  * ===================================
@@ -439,22 +536,6 @@ define('CO_SMONTA',      20);
 $conf['coturni'] = [
     CO_MONTA        =>  'In turno',
     CO_SMONTA       =>  'Smontato'
-];
-
-/*
- * ===================================
- * =========== VEICOLI ===============
- * ===================================
- */
-
-define('VE_TRASPORTO',       10);
-define('VE_OPERATIVI',      20);
-define('VE_SOCCORSO',       30);
-
-$conf['veicoli'] = [
-    VE_TRASPORTO        =>  'Ciclomotore',
-    VE_OPERATIVI       =>  'Motoveicolo',
-    VE_SOCCORSO        =>  'Autoveicolo'
 ];
 
 /*
@@ -665,6 +746,7 @@ $conf['corso_stato'] = [
  */
 
 define('ISCR_ANNULLATA',       0);
+define('ISCR_NEGATA',          5);
 define('ISCR_ABBANDONO',      10);
 define('ISCR_RICHIESTA',      20);
 define('ISCR_CONFERMATA',     30);
@@ -673,6 +755,7 @@ define('ISCR_BOCCIATO',       50);
 
 $conf['partecipazioneBase'] = [
     ISCR_ANNULLATA      =>  'Annullata', 
+    ISCR_NEGATA         =>  'Negata',
     ISCR_ABBANDONO      =>  'Abbandonato', 
     ISCR_RICHIESTA      =>  'Preiscritto', 
     ISCR_CONFERMATA     =>  'Iscritto',
@@ -688,3 +771,157 @@ $conf['partecipazioneBase'] = [
 
 define('POSTA_INGRESSO',        0);
 define('POSTA_USCITA',          1);
+
+
+/*
+ * ===================================
+ * ==== TESSERINO TIPO RICHIESTA =====
+ * ===================================
+ */
+
+define('RILASCIO',          0);
+define('RINNOVO',          10);
+define('DUPLICATO',        20);
+
+$conf['tesseriniTipo'] = [
+    RILASCIO        =>  'Rilascio', 
+    RINNOVO         =>  'Rinnovo',
+    DUPLICATO       =>  'Duplicato', 
+];  
+
+
+/*
+ * ===================================
+ * ==== TESSERINO STATO RICHIESTA ====
+ * ===================================
+ */
+
+define('RIFIUTATO',           0);
+define('RICHIESTO',          10);
+define('STAMPATO',           20);
+define('SPEDITO_CASA',       30);
+define('SPEDITO_COMITATO',   40);
+define('INVALIDATO',         50);
+
+$conf['tesseriniStato'] = [
+    RIFIUTATO           =>  'Richiesta di stampa rifiutata', 
+    RICHIESTO           =>  'Richiesta in attesa di essere lavorata',
+    STAMPATO            =>  'Tesserino emesso', 
+    SPEDITO_CASA        =>  'Tesserino inviato al domicilio', 
+    SPEDITO_COMITATO    =>  'Tesserino inviato al comitato', 
+    INVALIDATO          =>  'Tesserino invalidato',
+];  
+
+$conf['tesseriniStatoBreve'] = [
+    RIFIUTATO           =>  'Rifiutato', 
+    RICHIESTO           =>  'Richiesto',
+    STAMPATO            =>  'Emesso', 
+    SPEDITO_CASA        =>  'Emesso', 
+    SPEDITO_COMITATO    =>  'Emesso', 
+    INVALIDATO          =>  'Invalidato',
+];  
+
+
+/*
+ * ===================================
+ * ======== ORIENTAMENTO PDF =========
+ * ===================================
+ */
+
+define('ORIENTAMENTO_ORIZZONTALE',        'landscape');
+define('ORIENTAMENTO_VERTICALE',          'portrait');
+
+
+/*
+ * ===================================
+ * =========== VEICOLI ===============
+ * ===================================
+ */
+define('VEI_ATTIVO',       10);
+define('VEI_FUORIUSO',     20);
+
+$conf['vei_stato'] = [
+    VEI_ATTIVO        =>  "Attivo",
+    VEI_FUORIUSO      =>  "Fuori uso"
+];
+
+/*
+ * ===================================
+ * ======= VEICOLI MANUTENZIONE ======
+ * ===================================
+ */
+define('MAN_ORDINARIA',      10);
+define('MAN_STRAORDINARIA',  20);
+define('MAN_REVISIONE',      30);
+
+$conf['man_tipo'] = [
+    MAN_ORDINARIA      =>  "Manutenzione Ordinaria",
+    MAN_STRAORDINARIA  =>  "Manutenzione Straordinaria",
+    MAN_REVISIONE      =>  "Revisione Veicolo"
+];
+
+/*
+ * ===================================
+ * ======= INTERVALLI REVISIONE ======
+ * ===================================
+ */
+define('REV_ANNO',      31556926); 
+define('REV_DUEANNI',   63113852);
+
+$conf['rev_intervallo'] = [
+    REV_ANNO      =>  "1 Anno",
+    REV_DUEANNI   =>  "2 Anni"
+];
+
+/*
+ * ============ LIKE  ================
+ * ===================================
+ */
+
+define('PIACE',        0);
+define('NON_PIACE',    1);
+
+$conf['like'] = [
+    PIACE      =>  'Mi piace', 
+    NON_PIACE  =>  'Non mi piace'
+];  
+
+
+/*
+ * ===================================
+ * ====== CONVERSIONI ESTENSIONE =====
+ * ===================================
+ */
+
+$conf['est_geopolitica2attivita'] = [
+    EST_UNITA       =>  ATT_VIS_UNITA,
+    EST_LOCALE      =>  ATT_VIS_LOCALE,
+    EST_PROVINCIALE =>  ATT_VIS_PROVINCIALE,
+    EST_REGIONALE   =>  ATT_VIS_REGIONALE,
+    EST_NAZIONALE   =>  ATT_VIS_VOLONTARI     
+];
+
+$conf['est_attivita2geopolitica'] = [
+    ATT_VIS_UNITA       =>  EST_UNITA,
+    ATT_VIS_LOCALE      =>  EST_LOCALE,
+    ATT_VIS_PROVINCIALE =>  EST_PROVINCIALE,
+    ATT_VIS_REGIONALE   =>  EST_REGIONALE,
+    ATT_VIS_VOLONTARI   =>  EST_NAZIONALE,
+    ATT_VIS_PUBBLICA    =>  EST_NAZIONALE     
+];
+
+/*
+ * ===================================
+ * =========== PROVVEDIMENTI =========
+ * ===================================
+ */
+
+define('PROVV_AMMONIZIONE', 10);
+define('PROVV_SOSPENSIONE', 20);
+define('PROVV_ESPULSIONE',  30);
+
+$conf['provvedimenti'] = [
+    PROVV_AMMONIZIONE   =>  'Ammonizione scritta',
+    PROVV_SOSPENSIONE   =>  'Sospensione',
+    PROVV_ESPULSIONE    =>  'Espulsione'
+];

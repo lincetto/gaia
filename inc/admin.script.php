@@ -45,6 +45,15 @@ paginaAdmin();
                 <i class="icon-wrench"></i>
                 Fix attività
             </a>
+            <hr/>          
+            <div class="alert alert-danger">
+                <strong>Script per manutenzione aspiranti</strong>
+                <p>Ricalcola il raggio minimo per ogni aspirante in database</p>
+            </div>
+            <a href="?p=admin.script.aspiranti" data-attendere="Lasciami fare." class="btn btn-large btn-danger">
+                <i class="icon-wrench"></i>
+                Fix aspiranti
+            </a>
             <hr/>
             <div class="alert alert-warning">
                 <strong>Script per cancellazione comitati </strong>
@@ -65,7 +74,7 @@ paginaAdmin();
             </a>
             <hr/>
             <div class="alert alert-info">
-                <strong>Script per cancellazione comitati </strong>
+                <strong>Fix Titoli </strong>
                 <p>Questo script elimina i titoli doppioni correggendo anche i titoli personali</p>
             </div>
             <a href="?p=admin.fix.titoli" class="btn btn-large btn-info">
@@ -100,6 +109,17 @@ paginaAdmin();
                 <i class="icon-user"></i>
                 Fix appartenenze
             </a>
+            <hr/>
+            <div class="alert alert-success">
+                <strong>Script per rimozione spazi nelle targhe</strong>
+                <p>Questo script rimuove le gli spazi nelle targhe</p>
+            </div>
+            <a href="?p=admin.fix.veicoli" class="btn btn-large btn-info">
+                <i class="icon-thumbs-down"></i>
+                Fix spazi nei veicoli
+            </a>
         </div>
+
+        
     </div>
 </div>
